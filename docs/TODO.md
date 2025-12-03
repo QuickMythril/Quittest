@@ -33,6 +33,7 @@
 ## 8) Error handling and resilience ✅
 - Added consistent error placeholders for list loaders across feed, user feed, post replies, and hashtag search (`LoaderState` error messaging used with custom text per page).
 - Existing console.error logging retained for fetch/build-prefix failures.
+- Extended error messaging to followers/following lists for consistency.
 
 ## 9) Regression checks / QA
 - Scenarios to verify:

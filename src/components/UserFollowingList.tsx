@@ -239,6 +239,65 @@ export function UserFollowingList({
         );
       }
 
+      if (status === 'ERROR') {
+        return (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 8,
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.05)'
+                    : 'rgba(0, 0, 0, 0.03)',
+                fontSize: '40px',
+              }}
+            >
+              ⚠️
+            </Box>
+            <Box
+              sx={{
+                textAlign: 'center',
+                maxWidth: 400,
+              }}
+            >
+              <Box
+                sx={{
+                  fontSize: '20px',
+                  fontWeight: 600,
+                  mb: 1,
+                  color: (theme) => theme.palette.text.primary,
+                }}
+              >
+                Unable to load following list
+              </Box>
+              <Box
+                sx={{
+                  fontSize: '15px',
+                  color: (theme) => theme.palette.text.secondary,
+                  lineHeight: 1.5,
+                }}
+              >
+                Please try again in a moment.
+              </Box>
+            </Box>
+          </Box>
+        );
+      }
+
       // Loading state
       return (
         <Box

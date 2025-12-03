@@ -68,7 +68,12 @@ export function FollowersList({ userName, onUserClick }: FollowersListProps) {
     return (
       <Container>
         <EmptyState>
-          <Typography color="error">{error}</Typography>
+          <Typography variant="h6" gutterBottom>
+            Unable to load followers
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please try again in a moment.
+          </Typography>
         </EmptyState>
       </Container>
     );
