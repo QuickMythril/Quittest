@@ -1,7 +1,14 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { GlobalProvider, publishMultipleResourcesMock, updatePublishMock, showSuccess, showError } from 'qapp-core';
+import {
+  GlobalProvider,
+  publishMultipleResourcesMock,
+  updatePublishMock,
+  showSuccess,
+  showError,
+  setMockBalance,
+} from 'qapp-core';
 import { CreateProfile } from 'src/components/CreateProfile';
 
 vi.mock('src/components/NameSwitcher', () => ({
@@ -18,6 +25,7 @@ describe('CreateProfile embedded', () => {
     updatePublishMock.mockClear();
     showSuccess.mockClear();
     showError.mockClear();
+    setMockBalance(1);
   });
 
   it('publishes without prompting auth when name/address already present', async () => {
@@ -82,5 +90,55 @@ describe('CreateProfile embedded', () => {
     expect(publishMultipleResourcesMock).not.toHaveBeenCalled();
     expect(updatePublishMock).not.toHaveBeenCalled();
     expect(showError).toHaveBeenCalled();
+  });
+
+  it('requires bio before submitting', async () => {
+    render(
+      <GlobalProvider
+        value={{
+          auth: {
+            address: 'ADDR',
+            name: 'alice',
+          },
+        }}
+      >
+        <CreateProfile embedded />
+      </GlobalProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /create profile/i }));
+
+    expect(
+      await screen.findByText(/bio is required/i)
+    ).toBeInTheDocument();
+    expect(publishMultipleResourcesMock).not.toHaveBeenCalled();
+  });
+
+  it('blocks creation when balance is insufficient', async () => {
+    setMockBalance(0.001);
+
+    render(
+      <GlobalProvider
+        value={{
+          auth: {
+            address: 'ADDR',
+            name: 'alice',
+          },
+        }}
+      >
+        <CreateProfile embedded />
+      </GlobalProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/bio/i), {
+      target: { value: 'Hello' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /create profile/i }));
+
+    expect(publishMultipleResourcesMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(showError).toHaveBeenCalled();
+    });
   });
 });

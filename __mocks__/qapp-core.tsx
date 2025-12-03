@@ -29,6 +29,8 @@ type MockContext = {
   identifierOperations: IdentifierOperations;
 };
 
+let balanceValue = 1;
+
 const defaultAuth: AuthState = {
   address: undefined,
   name: undefined,
@@ -98,7 +100,11 @@ export const usePublish = () => ({
 });
 
 // Balance
-export const useQortBalance = () => ({ value: 1 });
+export const setMockBalance = (value: number) => {
+  balanceValue = value;
+};
+
+export const useQortBalance = () => ({ value: balanceValue });
 
 // Auth hook (for switchName, etc.)
 export const useAuth = () => ({
