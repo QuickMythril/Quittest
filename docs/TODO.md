@@ -18,8 +18,9 @@
 - Wired into post/reply/edit flows, like/unlike, repost, delete, follow/unfollow to keep buttons enabled but prompt when needed.
 - Next: extend the same helper to profile creation once the form is relocated to the user profile page.
 
-## 5) Auto-auth timing
-- Leave `authenticateOnMount: true` in `AppWrapper`. Ensure decline does not trigger any gate or redirect.
+## 5) Auto-auth timing ✅
+- `authenticateOnMount: true` remains in `src/AppWrapper.tsx`; with the profile gate removed, declining the prompt no longer blocks routing.
+- No additional changes required beyond keeping the background prompt and allowing decline.
 
 ## 6) Move profile creation to the user’s own profile page
 - Remove standalone `CreateProfile` render path in `Layout`.
