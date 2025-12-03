@@ -88,7 +88,11 @@ export function HashtagSearchResults({
         status={status}
         emptyIcon="🔍"
         emptyTitle="No posts found"
-        emptyMessage="No posts found with this hashtag"
+        emptyMessage={
+          status === 'ERROR'
+            ? 'Unable to load hashtag results right now.'
+            : 'No posts found with this hashtag'
+        }
       />
     );
   }, []);

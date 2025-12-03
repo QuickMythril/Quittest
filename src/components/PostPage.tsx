@@ -234,9 +234,11 @@ export function PostPage({
         emptyIcon={isMainPost ? '🔍' : '💬'}
         emptyTitle={isMainPost ? 'Post not found' : 'No replies yet'}
         emptyMessage={
-          isMainPost
-            ? 'This post may have been deleted or is not available.'
-            : 'Be the first to reply to this post!'
+          status === 'ERROR'
+            ? 'Unable to load content right now.'
+            : isMainPost
+              ? 'This post may have been deleted or is not available.'
+              : 'Be the first to reply to this post!'
         }
       />
     );

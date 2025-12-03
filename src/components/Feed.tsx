@@ -191,7 +191,11 @@ export function Feed({
         status={status}
         emptyIcon="📭"
         emptyTitle="No posts yet"
-        emptyMessage="Check back later for new content."
+        emptyMessage={
+          status === 'ERROR'
+            ? 'Unable to load the feed right now.'
+            : 'Check back later for new content.'
+        }
       />
     );
   }, []);
