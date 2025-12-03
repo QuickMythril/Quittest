@@ -107,8 +107,9 @@ export const setMockBalance = (value: number) => {
 export const useQortBalance = () => ({ value: balanceValue });
 
 // Auth hook (for switchName, etc.)
+export const switchNameMock = vi.fn();
 export const useAuth = () => ({
-  switchName: vi.fn(),
+  switchName: switchNameMock,
 });
 
 export const EnumCollisionStrength = {
