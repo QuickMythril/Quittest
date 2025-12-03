@@ -44,7 +44,23 @@
 - ✅ UI states: DOM tests for LoaderState error placeholder, posting auth hint via `showAuthHint`, and own-profile no-profile CTA showing embedded CreateProfile.
 - ✅ Followers/Following lists: Tests for followers error/empty states and following error placeholder messaging.
 - ✅ Coverage reporting: Enabled Vitest v8 coverage output (text, lcov, html).
-- **(Optional) Playwright smoke set:** Later, add route-intercepted e2e covering public feed unauth, decline auth prompt, auth without name (name-required toast), auth with name posting/liking/following, and profile creation from own profile page.
+## 11) Coverage improvement plan
+- ✅ 1) Core flows & UI surfaces: Added SocialApp handler tests for like/unlike, share link building, and self-repost prevention.
+- **2) Utility modules:** Cover profileCache (save/load/expiry/clear), profileQdn (fetch success/not-found/error), following helpers/storage (DB ops), postQdn argument composition for publishPost/reply/repost (mock identifierOperations/publishMultipleResources).
+- **3) Hooks:** Add tests for useFollowsList error and parsing, useFollowersList hashing/parsing/error, useInitializeName (preferred name switch/clear/error), useFollowingListDB/useFollowingStorage (no-auth return values, happy paths).
+- **4) Components with conditional UI:** Add tests for FollowersList/UserFollowingList states (loading/error/empty/populated), NameSwitcher menu/actions and preferredNamesMap updates, extra CreateProfile branches (cache save failure logging, disabled states).
+- **5) Routing/Pages:** Smoke tests for Routes loading AppWrapper/App on primary paths; simple renders for AppWrapper/App.tsx.
+- **6) Coverage thresholds (later):** Once coverage is higher, consider modest global thresholds (e.g., ~50% statements/branches) to prevent regressions.
+
+## 12) Playwright smoke set (optional)
+- **Setup:** Add Playwright with route interception or service worker stubs to mock QDN/Core calls; headless CI-friendly config; a small fixture for fake posts/profiles.
+- **Scenarios:**
+  1) Public feed loads unauthenticated (stubbed data).
+  2) Decline auto-auth; protected action triggers auth prompt.
+  3) Auth without name: posting shows name-required notice.
+  4) Auth with name: posting/liking/following succeed (stubbed backend).
+  5) Own profile with no profile shows CTA; creating profile succeeds and bio appears.
+- **Usage:** Run as a separate `playwright` script for smoke checks; not aimed at unit coverage but integration confidence.
 
 ## 9) Regression checks / QA
 - Scenarios to verify:
