@@ -8,10 +8,10 @@
 - Updated `src/hooks/useInitializeProfile.ts` to clear profile state only when the name actually changes and otherwise avoid unnecessary resets; still fetches/caches when `auth.name` exists and allows `profileData` to be `null` without gating.
 - Next: spot-check consumers of `profileData`/`hasProfile` to ensure they tolerate `null`.
 
-## 3) Public data path (feeds, posts, users) without auth
-- Verify current fetches in `Feed`, `UserFeed`, `PostPage`, `SearchPage` work without `auth`; if any call requires auth context, add an unauth fallback that directly calls `qortalRequest` (`SEARCH_QDN_RESOURCES`/`FETCH_QDN_RESOURCE`) using the same identifiers/services.
-- Keep using `identifierOperations` (it’s auth-free) to build prefixes. If it’s ever unavailable, define a minimal local helper using `buildSearchPrefix`/`buildLooseSearchPrefix` equivalents to avoid blocking.
-- Add error placeholders for each page type: inline “Couldn’t load content / unavailable” states when fetch fails.
+## 3) Public data path (feeds, posts, users) without auth ✅
+- `identifierOperations` remains auth-free; no gating on auth for fetch paths.
+- Added a shared error placeholder in `src/components/LoaderState.tsx` for `ERROR` status so feeds/search/user/post lists surface “Unable to load content” instead of blocking.
+- Next: if we encounter specific fetches that demand auth, add unauth `qortalRequest` fallbacks, but current paths already operate without auth.
 
 ## 4) On-demand authentication for protected actions
 - Keep buttons enabled. Wrap handlers for post/reply/edit/delete/like/repost/follow/unfollow/profile publish with:
