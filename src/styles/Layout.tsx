@@ -5,12 +5,7 @@ import { styled } from '@mui/system';
 import { useIframe } from '../hooks/useIframeListener';
 import { useInitializeProfile } from '../hooks/useInitializeProfile';
 import { useInitializeName } from '../hooks/useInitializeName';
-import {
-  hasProfileAtom,
-  isLoadingProfileAtom,
-  profileNameAtom,
-} from '../state/global/profile';
-import { CreateProfile } from '../components/CreateProfile';
+import { hasProfileAtom, isLoadingProfileAtom, profileNameAtom } from '../state/global/profile';
 import { RefObject, useEffect, useRef } from 'react';
 import { useGlobal } from 'qapp-core';
 import { useFollowingStorage } from '../hooks/useFollowingStorage';
@@ -61,12 +56,6 @@ const Layout = () => {
         <CircularProgress size={48} />
       </LoadingContainer>
     );
-  }
-
-  // If user doesn't have a profile, show the CreateProfile component
-  // This blocks access to all routes until profile is created
-  if (!hasProfile) {
-    return <CreateProfile />;
   }
 
   return (
