@@ -105,6 +105,10 @@ export const useAuth = () => ({
   switchName: vi.fn(),
 });
 
+export const EnumCollisionStrength = {
+  HIGH: 14,
+};
+
 // Types re-export stubs
 export type Service = any;
 export type LoaderListStatus = 'LOADING' | 'ERROR' | 'NO_RESULTS';

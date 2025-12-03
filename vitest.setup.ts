@@ -16,7 +16,12 @@ const originalError = console.error;
 beforeAll(() => {
   console.error = (...args: any[]) => {
     const msg = args[0];
-    if (typeof msg === 'string' && msg.includes('Error: Test expected error')) {
+    if (
+      typeof msg === 'string' &&
+      (msg.includes('Error: Test expected error') ||
+        msg.includes('Error with post:') ||
+        msg.includes('Error loading follows'))
+    ) {
       return;
     }
     originalError(...args);
