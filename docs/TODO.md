@@ -43,6 +43,7 @@
 - ✅ Profile init hook: Tests cover cache hit, QDN fetch on miss, auth-missing path, and error path clearing profile while stopping loading.
 - ✅ UI states: DOM tests for LoaderState error placeholder, posting auth hint via `showAuthHint`, and own-profile no-profile CTA showing embedded CreateProfile.
 - ✅ Followers/Following lists: Tests for followers error/empty states and following error placeholder messaging.
+- ✅ Coverage reporting: Enabled Vitest v8 coverage output (text, lcov, html).
 - **(Optional) Playwright smoke set:** Later, add route-intercepted e2e covering public feed unauth, decline auth prompt, auth without name (name-required toast), auth with name posting/liking/following, and profile creation from own profile page.
 
 ## 9) Regression checks / QA
