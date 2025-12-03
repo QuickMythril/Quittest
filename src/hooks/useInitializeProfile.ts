@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useAtom } from 'jotai';
 import { useGlobal } from 'qapp-core';
 import { hasProfileAtom, profileDataAtom, isLoadingProfileAtom, profileNameAtom } from '../state/global/profile';
@@ -21,14 +21,19 @@ export const useInitializeProfile = () => {
   const [, setProfileData] = useAtom(profileDataAtom);
   const [, setIsLoadingProfile] = useAtom(isLoadingProfileAtom);
   const [, setProfileName] = useAtom(profileNameAtom);
+  const previousNameRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Immediately set loading state and clear profile when name changes
-    // This prevents flash of old profile when switching names
+    // Immediately set loading state; clear profile only when name changes
+    // to avoid stale data flashes while keeping existing state when name is stable
     setIsLoadingProfile(true);
-    setHasProfile(false);
-    setProfileData(null);
-    setProfileName(null);
+
+    if (previousNameRef.current !== auth?.name) {
+      setHasProfile(false);
+      setProfileData(null);
+      setProfileName(null);
+      previousNameRef.current = auth?.name ?? null;
+    }
 
     const initializeProfile = async () => {
       // Only try to load if user is authenticated and has a name
@@ -83,4 +88,3 @@ export const useInitializeProfile = () => {
     initializeProfile();
   }, [auth?.name, identifierOperations, setHasProfile, setProfileData, setIsLoadingProfile, setProfileName]);
 };
-

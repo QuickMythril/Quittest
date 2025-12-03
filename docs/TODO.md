@@ -4,9 +4,9 @@
 - Updated `src/styles/Layout.tsx` to delete the `if (!hasProfile) return <CreateProfile />;` block so routes always render. Kept the loading guard for stale-name flashes.
 - Next: verify nothing else navigates to `CreateProfile` as a top-level gate.
 
-## 2) Make profile initialization non-blocking
-- In `src/hooks/useInitializeProfile.ts`, stop using `hasProfile` as an access gate: remove the default reset to `false` that blocks UI. Keep fetching/caching when `auth.name` exists; allow `profileData` to be `null` without blocking.
-- Audit components that consume `profileData`/`hasProfile` to tolerate `null` (e.g., avoid assumptions that cause crashes).
+## 2) Make profile initialization non-blocking ✅
+- Updated `src/hooks/useInitializeProfile.ts` to clear profile state only when the name actually changes and otherwise avoid unnecessary resets; still fetches/caches when `auth.name` exists and allows `profileData` to be `null` without gating.
+- Next: spot-check consumers of `profileData`/`hasProfile` to ensure they tolerate `null`.
 
 ## 3) Public data path (feeds, posts, users) without auth
 - Verify current fetches in `Feed`, `UserFeed`, `PostPage`, `SearchPage` work without `auth`; if any call requires auth context, add an unauth fallback that directly calls `qortalRequest` (`SEARCH_QDN_RESOURCES`/`FETCH_QDN_RESOURCE`) using the same identifiers/services.
