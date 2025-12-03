@@ -35,6 +35,16 @@
 - Existing console.error logging retained for fetch/build-prefix failures.
 - Extended error messaging to followers/following lists for consistency.
 
+## 10) Automated tests (Vitest + Testing Library; Playwright later)
+- ✅ Test harness setup: Added Vitest config (`vitest.config.ts`), global setup (`vitest.setup.ts`), and qapp-core/qortalRequest mocks under `__mocks__` to stub auth/lists/identifier operations, toast helpers, and balance; provides jsdom env and src/@ aliases.
+- **Auth helper coverage:** Unit tests for the on-demand auth helper used in SocialApp/CreateProfile — returns true when name/address present, calls authenticateUser once when missing, locks during in-flight, returns false on rejection, and emits name-required branch.
+- **Protected actions:** Tests for post/reply/edit/delete/like/repost/follow/unfollow handlers to assert they short-circuit on auth failure and invoke publish helpers on success (mock postQdn/follow helpers; assert call/no-call).
+- **CreateProfile embedded flow:** Tests for validation (bio required, balance threshold, name required), on-demand auth gating, disabled states during auth/publish, and success path (publishMultipleResources called; atoms updated; cache save invoked).
+- **Profile init hook:** Tests for stable-name behavior (no unnecessary resets), clearing on name change, cache hit vs. QDN fetch, and error path setting hasProfile false while stopping loading.
+- **UI states:** Snapshot/DOM tests to verify LoaderState error placeholder, page-specific loader empty/error messaging (Feed/UserFeed/PostPage/Hashtag), unauth posting hints (showAuthHint), and own-profile no-profile CTA rendering embedded CreateProfile.
+- **Followers/Following lists:** Tests to verify loading skeletons, empty state, and error placeholder messaging for both lists.
+- **(Optional) Playwright smoke set:** Later, add route-intercepted e2e covering public feed unauth, decline auth prompt, auth without name (name-required toast), auth with name posting/liking/following, and profile creation from own profile page.
+
 ## 9) Regression checks / QA
 - Scenarios to verify:
   - Fresh load, decline auto-auth: feed/search/user/post pages still show data; protected actions prompt.
