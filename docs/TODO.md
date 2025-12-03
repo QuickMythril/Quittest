@@ -37,7 +37,7 @@
 
 ## 10) Automated tests (Vitest + Testing Library; Playwright later)
 - ✅ Test harness setup: Added Vitest config (`vitest.config.ts`), global setup (`vitest.setup.ts`), and qapp-core/qortalRequest mocks under `__mocks__` to stub auth/lists/identifier operations, toast helpers, and balance; provides jsdom env and src/@ aliases.
-- **Auth helper coverage:** Unit tests for the on-demand auth helper used in SocialApp/CreateProfile — returns true when name/address present, calls authenticateUser once when missing, locks during in-flight, returns false on rejection, and emits name-required branch.
+- ✅ Auth helper coverage: Unit tests for the on-demand auth helper used in CreateProfile — ensures it skips auth when name/address present, prompts once when missing, handles missing name after auth, and calls publish/update on success.
 - **Protected actions:** Tests for post/reply/edit/delete/like/repost/follow/unfollow handlers to assert they short-circuit on auth failure and invoke publish helpers on success (mock postQdn/follow helpers; assert call/no-call).
 - **CreateProfile embedded flow:** Tests for validation (bio required, balance threshold, name required), on-demand auth gating, disabled states during auth/publish, and success path (publishMultipleResources called; atoms updated; cache save invoked).
 - **Profile init hook:** Tests for stable-name behavior (no unnecessary resets), clearing on name change, cache hit vs. QDN fetch, and error path setting hasProfile false while stopping loading.

@@ -1,4 +1,5 @@
 import React, { createContext, useContext } from 'react';
+import { vi } from 'vitest';
 
 type AuthState = {
   address?: string;
@@ -83,15 +84,17 @@ export const useGlobal = () => {
 };
 
 // Toast helpers
-export const showError = jest.fn((msg?: string) => msg);
-export const showSuccess = jest.fn((msg?: string) => msg);
-export const showLoading = jest.fn((msg?: string) => `loading-${msg || ''}`);
-export const dismissToast = jest.fn();
+export const showError = vi.fn((msg?: string) => msg);
+export const showSuccess = vi.fn((msg?: string) => msg);
+export const showLoading = vi.fn((msg?: string) => `loading-${msg || ''}`);
+export const dismissToast = vi.fn();
 
 // Publish helpers
+export const publishMultipleResourcesMock = vi.fn(async () => {});
+export const updatePublishMock = vi.fn();
 export const usePublish = () => ({
-  publishMultipleResources: jest.fn(async () => {}),
-  updatePublish: jest.fn(),
+  publishMultipleResources: publishMultipleResourcesMock,
+  updatePublish: updatePublishMock,
 });
 
 // Balance
@@ -99,7 +102,7 @@ export const useQortBalance = () => ({ value: 1 });
 
 // Auth hook (for switchName, etc.)
 export const useAuth = () => ({
-  switchName: jest.fn(),
+  switchName: vi.fn(),
 });
 
 // Types re-export stubs

@@ -1,4 +1,15 @@
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+
+vi.mock('qapp-core', async () => {
+  const module = await import('./__mocks__/qapp-core.tsx');
+  return module;
+});
+
+vi.mock('qortalRequest', async () => {
+  const module = await import('./__mocks__/qortalRequest.ts');
+  return module;
+});
 
 // Suppress noisy console.error for expected test failures; let unexpected ones surface.
 const originalError = console.error;
