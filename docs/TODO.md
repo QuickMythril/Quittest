@@ -49,7 +49,7 @@
 - ✅ 2) Utility modules: Added tests for profileCache (save/load/expiry/clear with fake IndexedDB) and profileQdn (success/not-found/error).
 - ✅ 3) Hooks: Added tests for useFollowsList (parse + error) and useFollowersList (parse + error).
 - ✅ 4) Components with conditional UI: Added tests for NameSwitcher menu/actions and followers/following error/empty states.
-- **5) Routing/Pages:** Smoke tests for Routes loading AppWrapper/App on primary paths; simple renders for AppWrapper/App.tsx.
+- ✅ 5) Routing/Pages: Smoke tests for Routes loading AppWrapper/App and AppWrapper/App rendering.
 - **6) Coverage thresholds (later):** Once coverage is higher, consider modest global thresholds (e.g., ~50% statements/branches) to prevent regressions.
 
 ## 12) Playwright smoke set (optional)
