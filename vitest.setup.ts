@@ -22,7 +22,9 @@ beforeAll(() => {
         msg.includes('Error with post:') ||
         msg.includes('Error loading follows') ||
         msg.includes('Error initializing profile') ||
-        msg.includes('Error fetching profile from QDN'))
+        msg.includes('Error fetching profile from QDN') ||
+        msg.includes('Error fetching follows') ||
+        msg.includes('Error fetching followers'))
     ) {
       return;
     }
