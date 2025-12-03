@@ -275,6 +275,7 @@ interface NewPostInputProps {
   initialText?: string;
   initialMedia?: MediaAttachment[];
   isEditing?: boolean;
+  showAuthHint?: boolean;
 }
 
 // Helper function to get file extension
@@ -294,6 +295,7 @@ export function NewPostInput({
   initialText = '',
   initialMedia = [],
   isEditing = false,
+  showAuthHint = false,
 }: NewPostInputProps) {
   const theme = useTheme();
   const { isHEVC } = useMediaInfo();
@@ -692,6 +694,20 @@ export function NewPostInput({
           {userName[0]}
         </StyledAvatar>
         <InputSection>
+          <Box sx={{ display: 'flex', flexDirection: 'column', mb: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              @{userName}
+            </Typography>
+            {showAuthHint && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ opacity: 0.8 }}
+              >
+                You’ll be prompted to authenticate before posting.
+              </Typography>
+            )}
+          </Box>
           <TextFieldWrapper>
             <StyledContentEditable
               ref={contentEditableRef}

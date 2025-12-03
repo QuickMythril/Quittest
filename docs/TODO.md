@@ -26,10 +26,9 @@
 - `CreateProfile` now supports an embedded mode (hides NameSwitcher/fixed layout, prompts auth on demand) and is rendered on the current user’s profile page when no profile is found.
 - Added “No profile yet” + CTA in `src/components/UserFeed.tsx`; reuses existing creation logic.
 
-## 7) UI/UX polish for unauthenticated mode
-- New post/reply inputs: show an auth prompt on action rather than disabling, but provide helper text/tooltips indicating auth + name is required to publish.
-- Likes/reposts/follows: same prompt-on-click behavior; short helper text if unauthenticated.
-- Name-required flow: just toast and abort when missing `auth.name`.
+## 7) UI/UX polish for unauthenticated mode ✅
+- Added inline auth hint to posting inputs via `showAuthHint` prop (`NewPostInput`), wired into feed, reply input, and modal so users see they'll be prompted before posting.
+- Likes/reposts/follows already prompt via on-demand auth; toasts still cover name-required flow.
 
 ## 8) Error handling and resilience
 - Add consistent placeholders for load failures on feed/user/post/search pages.

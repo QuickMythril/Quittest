@@ -116,6 +116,7 @@ export function NewPostModal({
           initialMedia={initialMedia}
           isEditing={isEditing}
           placeholder={isReplying ? 'Post your reply...' : undefined}
+          showAuthHint
         />
       </StyledDialogContent>
     </StyledDialog>

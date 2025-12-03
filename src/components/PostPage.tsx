@@ -377,6 +377,7 @@ export function PostPage({
             userName={userName}
             isPublishing={isPublishing}
             placeholder="Post your reply..."
+            showAuthHint={!auth?.address || !auth?.name}
           />
         </ReplyInputContainer>
       )}

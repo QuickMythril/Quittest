@@ -411,6 +411,7 @@ export function Feed({
         userAvatar={userAvatar}
         userName={userName}
         isPublishing={isPublishing}
+        showAuthHint
       />
       <PostsContainer>
         {/* @ts-ignore - ref type issue with MemoExoticComponent */}
