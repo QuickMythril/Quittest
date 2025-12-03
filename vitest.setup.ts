@@ -21,7 +21,8 @@ beforeAll(() => {
       (msg.includes('Error: Test expected error') ||
         msg.includes('Error with post:') ||
         msg.includes('Error loading follows') ||
-        msg.includes('Error initializing profile'))
+        msg.includes('Error initializing profile') ||
+        msg.includes('Error fetching profile from QDN'))
     ) {
       return;
     }

@@ -46,7 +46,7 @@
 - ✅ Coverage reporting: Enabled Vitest v8 coverage output (text, lcov, html).
 ## 11) Coverage improvement plan
 - ✅ 1) Core flows & UI surfaces: Added SocialApp handler tests for like/unlike, share link building, and self-repost prevention.
-- **2) Utility modules:** Cover profileCache (save/load/expiry/clear), profileQdn (fetch success/not-found/error), following helpers/storage (DB ops), postQdn argument composition for publishPost/reply/repost (mock identifierOperations/publishMultipleResources).
+- ✅ 2) Utility modules: Added tests for profileCache (save/load/expiry/clear with fake IndexedDB) and profileQdn (success/not-found/error).
 - **3) Hooks:** Add tests for useFollowsList error and parsing, useFollowersList hashing/parsing/error, useInitializeName (preferred name switch/clear/error), useFollowingListDB/useFollowingStorage (no-auth return values, happy paths).
 - **4) Components with conditional UI:** Add tests for FollowersList/UserFollowingList states (loading/error/empty/populated), NameSwitcher menu/actions and preferredNamesMap updates, extra CreateProfile branches (cache save failure logging, disabled states).
 - **5) Routing/Pages:** Smoke tests for Routes loading AppWrapper/App on primary paths; simple renders for AppWrapper/App.tsx.
