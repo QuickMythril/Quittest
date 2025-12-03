@@ -41,8 +41,8 @@
 - ✅ Protected actions: Tests for post flows to ensure on-demand auth short-circuits when name is missing and publishes when name/address are present (mocked Feed triggers handlers; postQdn publish mocked).
 - ✅ CreateProfile embedded flow: Tests cover validation (bio required, balance threshold, name required), on-demand auth gating, and success path with publish/update and cache save mocked.
 - ✅ Profile init hook: Tests cover cache hit, QDN fetch on miss, auth-missing path, and error path clearing profile while stopping loading.
-- **UI states:** Snapshot/DOM tests to verify LoaderState error placeholder, page-specific loader empty/error messaging (Feed/UserFeed/PostPage/Hashtag), unauth posting hints (showAuthHint), and own-profile no-profile CTA rendering embedded CreateProfile.
-- **Followers/Following lists:** Tests to verify loading skeletons, empty state, and error placeholder messaging for both lists.
+- ✅ UI states: DOM tests for LoaderState error placeholder, posting auth hint via `showAuthHint`, and own-profile no-profile CTA showing embedded CreateProfile.
+- ✅ Followers/Following lists: Tests for followers error/empty states and following error placeholder messaging.
 - **(Optional) Playwright smoke set:** Later, add route-intercepted e2e covering public feed unauth, decline auth prompt, auth without name (name-required toast), auth with name posting/liking/following, and profile creation from own profile page.
 
 ## 9) Regression checks / QA
