@@ -13,11 +13,10 @@
 - Added a shared error placeholder in `src/components/LoaderState.tsx` for `ERROR` status so feeds/search/user/post lists surface “Unable to load content” instead of blocking.
 - Next: if we encounter specific fetches that demand auth, add unauth `qortalRequest` fallbacks, but current paths already operate without auth.
 
-## 4) On-demand authentication for protected actions
-- Keep buttons enabled. Wrap handlers for post/reply/edit/delete/like/repost/follow/unfollow/profile publish with:
-  1) If `!auth.address || !auth.name`, `await auth.authenticateUser()`.
-  2) If still `!auth.name`, toast “A Qortal name is required” and abort.
-- Prevent double prompts: lock the handler while an auth attempt is in flight.
+## 4) On-demand authentication for protected actions ✅
+- Added `ensureAuthenticatedWithName` helper in `src/components/SocialApp.tsx` that prompts auth on demand, locks during an in-flight prompt, and toasts when a name is missing.
+- Wired into post/reply/edit flows, like/unlike, repost, delete, follow/unfollow to keep buttons enabled but prompt when needed.
+- Next: extend the same helper to profile creation once the form is relocated to the user profile page.
 
 ## 5) Auto-auth timing
 - Leave `authenticateOnMount: true` in `AppWrapper`. Ensure decline does not trigger any gate or redirect.

@@ -258,6 +258,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     onConfirm: () => {},
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isAuthenticatingAction, setIsAuthenticatingAction] = useState(false);
 
   // Track navigation history to determine if we came from another post
   const previousPathRef = useRef<string>('');
@@ -320,6 +321,35 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const isSearchPage = location.pathname.startsWith('/search');
   const isOwnProfile = isUserPage && params.userName === auth?.name;
 
+  const ensureAuthenticatedWithName = useCallback(async () => {
+    if (auth?.address && auth?.name) {
+      return true;
+    }
+
+    if (isAuthenticatingAction) {
+      return false;
+    }
+
+    setIsAuthenticatingAction(true);
+    try {
+      const result = await auth?.authenticateUser?.();
+      const address = result?.address ?? auth?.address;
+      const name = result?.name ?? auth?.name;
+
+      if (!address || !name) {
+        showError('A Qortal name is required to perform this action.');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Authentication failed:', error);
+      return false;
+    } finally {
+      setIsAuthenticatingAction(false);
+    }
+  }, [auth, isAuthenticatingAction]);
+
   // Empty handler functions for now
   const handleNavigate = (page: string) => {
     if (page === 'home') {
@@ -370,9 +400,9 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     let loadId: string | undefined;
 
     try {
-      if (!auth?.name) {
-        showError('A Qortal name is required to publish');
-        throw new Error('A Qortal name is required to publish');
+      const authed = await ensureAuthenticatedWithName();
+      if (!authed) {
+        throw new Error('Authentication required to publish');
       }
 
       // Check if we're replying to a post
@@ -466,10 +496,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
 
   const handleLike = useCallback(
     async (postId: string, isLiked: boolean) => {
-      if (!auth?.name) {
-        showError('You must be logged in to like a post');
-        return;
-      }
+      const authed = await ensureAuthenticatedWithName();
+      if (!authed) return;
 
       let loadId: string | undefined;
 
@@ -508,11 +536,14 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         }
       }
     },
-    [auth, identifierOperations, lists.deleteResource, lists.addNewResources]
+    [auth, ensureAuthenticatedWithName, identifierOperations, lists.deleteResource, lists.addNewResources]
   );
 
   const handleRetweet = useCallback(
     async (postId: string, post?: PostData) => {
+      const authed = await ensureAuthenticatedWithName();
+      if (!authed) return;
+
       if (!post) {
         console.error('Post data is required for reposting');
         return;
@@ -536,9 +567,9 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           let loadId: string | undefined;
 
           try {
-            if (!auth?.name) {
-              showError('A Qortal name is required to repost');
-              throw new Error('A Qortal name is required to repost');
+            const confirmedAuth = await ensureAuthenticatedWithName();
+            if (!confirmedAuth) {
+              throw new Error('Authentication required to repost');
             }
 
             loadId = showLoading('Reposting...');
@@ -566,7 +597,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         },
       });
     },
-    [auth?.name, identifierOperations, lists.addNewResources]
+    [auth?.name, ensureAuthenticatedWithName, identifierOperations, lists.addNewResources]
   );
 
   const handleReply = useCallback((postId: string, postName: string) => {
@@ -585,9 +616,9 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     let loadId: string | undefined;
 
     try {
-      if (!auth?.name) {
-        showError('A Qortal name is required to publish');
-        throw new Error('A Qortal name is required to publish');
+      const authed = await ensureAuthenticatedWithName();
+      if (!authed) {
+        throw new Error('Authentication required to publish');
       }
 
       if (!content.text.trim() && content.media.length === 0) {
@@ -654,6 +685,9 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
 
   const handleDelete = useCallback(
     async (post: PostData) => {
+      const authed = await ensureAuthenticatedWithName();
+      if (!authed) return;
+
       // Check if post has videos
       const hasVideos = post.data?.videos && post.data.videos.length > 0;
 
@@ -671,6 +705,11 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           let loadId: string | undefined;
 
           try {
+            const confirmedAuth = await ensureAuthenticatedWithName();
+            if (!confirmedAuth) {
+              throw new Error('Authentication required to delete');
+            }
+
             loadId = showLoading('Deleting post...');
 
             await deletePost(
@@ -706,7 +745,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         },
       });
     },
-    [pinnedPostIds, lists.deleteResource]
+    [ensureAuthenticatedWithName, pinnedPostIds, lists.deleteResource]
   );
 
   const handlePin = useCallback((postId: string) => {
@@ -756,10 +795,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
 
   const handleFollow = useCallback(
     async (targetUserName: string) => {
-      if (!auth?.name) {
-        showError('You must be logged in to follow a user');
-        return;
-      }
+      const authed = await ensureAuthenticatedWithName();
+      if (!authed) return;
 
       let loadId: string | undefined;
 
@@ -790,15 +827,13 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         }
       }
     },
-    [auth, identifierOperations, lists.addNewResources, refetchFollows]
+    [auth, ensureAuthenticatedWithName, identifierOperations, lists.addNewResources, refetchFollows]
   );
 
   const handleUnfollow = useCallback(
     async (targetUserName: string) => {
-      if (!auth?.name) {
-        showError('You must be logged in to unfollow a user');
-        return;
-      }
+      const authed = await ensureAuthenticatedWithName();
+      if (!authed) return;
 
       let loadId: string | undefined;
 
@@ -829,7 +864,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         }
       }
     },
-    [auth, identifierOperations, lists.deleteResource, refetchFollows]
+    [auth, ensureAuthenticatedWithName, identifierOperations, lists.deleteResource, refetchFollows]
   );
 
   return (
