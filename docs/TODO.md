@@ -22,10 +22,9 @@
 - `authenticateOnMount: true` remains in `src/AppWrapper.tsx`; with the profile gate removed, declining the prompt no longer blocks routing.
 - No additional changes required beyond keeping the background prompt and allowing decline.
 
-## 6) Move profile creation to the user’s own profile page
-- Remove standalone `CreateProfile` render path in `Layout`.
-- Reuse `CreateProfile` form/logic inside the current user’s profile view (`/user/:auth.name`) when no profile data is found. Show a “No profile yet” message plus “Create profile” button there only.
-- Ensure profile creation still checks balance/name and updates cache/state as before.
+## 6) Move profile creation to the user’s own profile page ✅
+- `CreateProfile` now supports an embedded mode (hides NameSwitcher/fixed layout, prompts auth on demand) and is rendered on the current user’s profile page when no profile is found.
+- Added “No profile yet” + CTA in `src/components/UserFeed.tsx`; reuses existing creation logic.
 
 ## 7) UI/UX polish for unauthenticated mode
 - New post/reply inputs: show an auth prompt on action rather than disabling, but provide helper text/tooltips indicating auth + name is required to publish.

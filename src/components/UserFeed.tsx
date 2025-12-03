@@ -1,5 +1,5 @@
 import { styled } from '@mui/system';
-import { Typography, IconButton, Avatar, Button } from '@mui/material';
+import { Typography, IconButton, Avatar, Button, Box } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
@@ -22,6 +22,7 @@ import { FollowersList } from './FollowersList';
 import { UserFollowingList } from './UserFollowingList';
 import { useFollowingList } from '../hooks/useFollowingList';
 import { useFetchProfile } from '../hooks/useFetchProfile';
+import { CreateProfile } from './CreateProfile';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -415,6 +416,20 @@ export function UserFeed({
           Following
         </Tab>
       </TabsContainer>
+
+      {isOwnProfile && !profile && (
+        <Box sx={{ px: 2, py: 3 }}>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="h6" fontWeight={700}>
+              No profile yet
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Create your profile so others can see your bio.
+            </Typography>
+          </Box>
+          <CreateProfile embedded />
+        </Box>
+      )}
 
       <PostsContainer>
         {activeTab === 'posts' && (

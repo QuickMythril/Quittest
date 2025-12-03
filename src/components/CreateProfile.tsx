@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { styled } from '@mui/system';
 import {
   Box,
@@ -18,11 +18,7 @@ import {
   showSuccess,
   useQortBalance,
 } from 'qapp-core';
-import {
-  hasProfileAtom,
-  profileDataAtom,
-  profileNameAtom,
-} from '../state/global/profile';
+import { hasProfileAtom, profileDataAtom, profileNameAtom } from '../state/global/profile';
 import { saveProfileToCache } from '../utils/profileCache';
 import { NameSwitcher } from './NameSwitcher';
 
@@ -93,7 +89,11 @@ const CreateButton = styled(Button)(({ theme }) => ({
   fontSize: '16px',
 }));
 
-export function CreateProfile() {
+interface CreateProfileProps {
+  embedded?: boolean;
+}
+
+export function CreateProfile({ embedded = false }: CreateProfileProps) {
   const { auth, identifierOperations } = useGlobal();
   const { updatePublish, publishMultipleResources } = usePublish();
   const { value: balance } = useQortBalance();
@@ -104,6 +104,37 @@ export function CreateProfile() {
   const [bio, setBio] = useState('');
   const [bioError, setBioError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const displayName = auth?.name ?? 'Unknown';
+
+  const ensureAuthenticatedWithName = useCallback(async () => {
+    if (auth?.address && auth?.name) {
+      return true;
+    }
+
+    if (isAuthenticating) {
+      return false;
+    }
+
+    setIsAuthenticating(true);
+    try {
+      const result = await auth?.authenticateUser?.();
+      const address = result?.address ?? auth?.address;
+      const name = result?.name ?? auth?.name;
+
+      if (!address || !name) {
+        showError('A Qortal name is required to perform this action.');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Authentication failed:', error);
+      return false;
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, [auth, isAuthenticating]);
 
   const handleBioChange = (value: string) => {
     // Enforce 200 character limit
@@ -134,6 +165,9 @@ export function CreateProfile() {
     if (!validateForm()) {
       return;
     }
+
+    const authed = await ensureAuthenticatedWithName();
+    if (!authed) return;
 
     // Check balance before publishing
     if (!balance || balance < 0.01) {
@@ -223,82 +257,23 @@ export function CreateProfile() {
     );
   };
 
-  const handleAuthenticate = async () => {
-    try {
-      await auth.authenticateUser();
-    } catch (error) {
-      console.error('Authentication failed:', error);
-    }
-  };
+  const Wrapper = embedded ? Box : Container;
+  const Content = embedded ? Box : MainContent;
 
-  // Case 1: User not authenticated (no address)
-  if (!auth?.address) {
-    return (
-      <Container>
-        <MainContent>
-          <ProfileCard elevation={3}>
-            <FormTitle variant="h4">Authentication Required</FormTitle>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ mb: 3, textAlign: 'center' }}
-            >
-              Please authenticate with your Qortal account to create a profile
-            </Typography>
-
-            <CreateButton
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={handleAuthenticate}
-              size="large"
-              disabled={auth.isLoadingUser}
-              startIcon={
-                auth.isLoadingUser ? (
-                  <CircularProgress size={20} color="inherit" />
-                ) : undefined
-              }
-            >
-              {auth.isLoadingUser ? 'Authenticating...' : 'Authenticate'}
-            </CreateButton>
-          </ProfileCard>
-        </MainContent>
-      </Container>
-    );
-  }
-
-  // Case 2: User authenticated but no name registered
-  if (!auth.name) {
-    return (
-      <Container>
-        <MainContent>
-          <ProfileCard elevation={3}>
-            <FormTitle variant="h4">Name Registration Required</FormTitle>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ mb: 3, textAlign: 'center' }}
-            >
-              A Qortal name is required to publish on Qortal. Please register a
-              name before creating your profile.
-            </Typography>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ textAlign: 'center' }}
-            >
-              You can register a name through the Qortal Core application.
-            </Typography>
-          </ProfileCard>
-        </MainContent>
-      </Container>
-    );
-  }
-
-  // Case 3: User authenticated with name - show profile creation form
   return (
-    <Container>
-      <MainContent>
+    <Wrapper
+      sx={
+        embedded
+          ? {
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              py: 2,
+            }
+          : undefined
+      }
+    >
+      <Content>
         <ProfileCard elevation={3}>
           <FormTitle variant="h4">Create Your Profile</FormTitle>
           <Typography
@@ -315,7 +290,7 @@ export function CreateProfile() {
               Your Qortal Name
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 600, mt: 0.5 }}>
-              @{auth.name}
+              @{displayName}
             </Typography>
           </QortalNameDisplay>
 
@@ -361,7 +336,7 @@ export function CreateProfile() {
             color="primary"
             onClick={handleCreateProfile}
             size="large"
-            disabled={isLoading}
+            disabled={isLoading || isAuthenticating}
             startIcon={
               isLoading ? (
                 <CircularProgress size={20} color="inherit" />
@@ -371,12 +346,14 @@ export function CreateProfile() {
             {isLoading ? 'Creating Profile...' : 'Create Profile'}
           </CreateButton>
         </ProfileCard>
-      </MainContent>
+      </Content>
 
       {/* Allow user to switch names if they have multiple names */}
-      <NameSwitcherWrapper>
-        <NameSwitcher />
-      </NameSwitcherWrapper>
-    </Container>
+      {!embedded && (
+        <NameSwitcherWrapper>
+          <NameSwitcher />
+        </NameSwitcherWrapper>
+      )}
+    </Wrapper>
   );
 }
