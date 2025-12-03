@@ -20,7 +20,8 @@ beforeAll(() => {
       typeof msg === 'string' &&
       (msg.includes('Error: Test expected error') ||
         msg.includes('Error with post:') ||
-        msg.includes('Error loading follows'))
+        msg.includes('Error loading follows') ||
+        msg.includes('Error initializing profile'))
     ) {
       return;
     }
