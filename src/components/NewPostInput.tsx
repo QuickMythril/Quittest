@@ -11,12 +11,12 @@ import ImageIcon from '@mui/icons-material/Image';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
 import CloseIcon from '@mui/icons-material/Close';
-import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { useState, useRef, useEffect, lazy, Suspense, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { EmojiClickData, EmojiStyle, Theme } from 'emoji-picker-react';
 import { VideoMetadata as VideoMetadataType } from './VideoMetadataDialog';
 import { useVideoMetadata } from '../hooks/useVideoMetadata';
-import { MediaAttachment } from '../utils/postQdn';
+import { MediaAttachment, buildHashtagDescription } from '../utils/postQdn';
 import { useMediaInfo } from '../hooks/useMediaInfo';
 import { showError } from 'qapp-core';
 
@@ -321,6 +321,14 @@ export function NewPostInput({
   const { videosWithMetadata } = useVideoMetadata(
     existingVideoRefs.length > 0 ? existingVideoRefs : undefined
   );
+  const hashtagStatus = useMemo(() => {
+    const matches = text.match(/#\w+/g) || [];
+    if (!matches.length) {
+      return { truncated: false };
+    }
+    const { truncated } = buildHashtagDescription(matches);
+    return { truncated };
+  }, [text]);
 
   // Initialize text and media once when entering edit mode
   useEffect(() => {
@@ -904,6 +912,15 @@ export function NewPostInput({
                 <EmojiEmotionsIcon />
               </IconButton>
             </MediaActions>
+            {hashtagStatus.truncated && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ flex: 1, textAlign: 'right', pr: 2 }}
+              >
+                Hashtags will be trimmed to fit the limit.
+              </Typography>
+            )}
             <PostButton
               disabled={(!text.trim() && media.length === 0) || isPublishing}
               onClick={handlePost}

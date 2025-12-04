@@ -215,10 +215,18 @@ export function stringToBase64(str: string): string {
 /**
  * Normalize each keyword for searchability and wrap with delimiters
  */
-function normalizeKeywords(strings: string[], maxLength = 150): string {
+/**
+ * Build the metadata description string for hashtags, fitting within the
+ * QDN description length budget. Uses ~tag~ delimiters for search.
+ */
+export function buildHashtagDescription(
+  strings: string[],
+  maxLength = 150
+): { description: string; truncated: boolean } {
   const normalizedStrings: string[] = [];
   const seen = new Set<string>();
   let totalLength = 0;
+  let wasTruncated = false;
 
   for (const raw of strings) {
     const normalized = raw.trim().toLowerCase();
@@ -227,18 +235,31 @@ function normalizeKeywords(strings: string[], maxLength = 150): string {
     // Space for comma if not first, plus tilde wrappers
     const separatorLength = totalLength === 0 ? 0 : 1;
     const available = maxLength - totalLength - separatorLength - 2; // 2 for wrapping tildes
-    if (available <= 0) break;
+    if (available <= 0) {
+      wasTruncated = true;
+      break;
+    }
 
-    const truncated = normalized.slice(0, available);
-    if (!truncated) break;
+    const clipped = normalized.slice(0, available);
+    if (!clipped) {
+      wasTruncated = true;
+      break;
+    }
 
-    const token = `~${truncated}~`;
+    const token = `~${clipped}~`;
+    if (clipped.length < normalized.length) {
+      wasTruncated = true;
+    }
     normalizedStrings.push(token);
     totalLength += separatorLength + token.length;
     seen.add(normalized);
   }
 
-  return normalizedStrings.join(',');
+  return { description: normalizedStrings.join(','), truncated: wasTruncated };
+}
+
+export function normalizeKeywords(strings: string[], maxLength = 150): string {
+  return buildHashtagDescription(strings, maxLength).description;
 }
 
 /**
