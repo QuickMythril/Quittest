@@ -238,7 +238,6 @@ export function NameSwitcher() {
                   color: 'text.secondary',
                 }}
               >
-                Connect to select a name
               </Typography>
             </NameDetails>
           </NameInfo>
