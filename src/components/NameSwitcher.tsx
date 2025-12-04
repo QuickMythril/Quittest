@@ -47,7 +47,7 @@ const NameSwitcherButton = styled('button')(({ theme }) => ({
         ? '0 4px 12px rgba(0, 0, 0, 0.3)'
         : '0 4px 12px rgba(0, 0, 0, 0.1)',
   },
-  [theme.breakpoints.down('lg')]: {
+  [theme.breakpoints.down('md')]: {
     width: '52px',
     height: '52px',
     borderRadius: '50%',
@@ -84,14 +84,14 @@ const NameDetails = styled('div')(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-start',
-  [theme.breakpoints.down('lg')]: {
+  [theme.breakpoints.down('md')]: {
     display: 'none',
   },
 }));
 
 const ArrowIcon = styled(KeyboardArrowDownIcon)(({ theme }) => ({
   transition: 'transform 0.2s ease',
-  [theme.breakpoints.down('lg')]: {
+  [theme.breakpoints.down('md')]: {
     display: 'none',
   },
 }));
