@@ -383,8 +383,7 @@ export function ForwardModal({
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          Choose whether to share this post with a user or a group. Recipient
-          selection and sending will be added next.
+          Choose whether to share this post with a user or a group.
         </Typography>
 
         <ToggleButtonGroup
@@ -685,28 +684,9 @@ export function ForwardModal({
           </Box>
         )}
 
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 2,
-            border: '1px dashed',
-            borderColor: 'divider',
-            backgroundColor: (theme) =>
-              theme.palette.mode === 'dark'
-                ? 'rgba(255,255,255,0.03)'
-                : 'rgba(0,0,0,0.02)',
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            Post to share:
-          </Typography>
-          <Typography variant="body1" sx={{ fontWeight: 600 }}>
-            {postName || 'Unknown name'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            ID: {postId || 'Unknown'}
-          </Typography>
-        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+          Sharing a post by: {postName || 'Unknown'}
+        </Typography>
       </DialogContent>
 
       <DialogActions
@@ -719,9 +699,6 @@ export function ForwardModal({
           gap: 2,
         }}
       >
-        <Typography variant="caption" color="text.secondary">
-          Forwarding flow coming next.
-        </Typography>
         <Button
           variant="contained"
           color="primary"
