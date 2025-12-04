@@ -16,6 +16,7 @@ import {
   ListItemText,
   CircularProgress,
   Chip,
+  TextField,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
@@ -71,6 +72,13 @@ export function ForwardModal({
     'idle' | 'checking' | 'valid' | 'invalid'
   >('idle');
   const lastSearchQueryRef = useRef<string>('');
+  const [groups, setGroups] = useState<
+    { groupId: number; groupName: string; memberCount?: number }[]
+  >([]);
+  const [groupFilter, setGroupFilter] = useState('');
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [groupError, setGroupError] = useState<string | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open) {
@@ -79,6 +87,11 @@ export function ForwardModal({
       setSelectedUser(null);
       setValidationState('idle');
       setValidationMessage('');
+      setAddressCheck('idle');
+      setGroups([]);
+      setGroupFilter('');
+      setGroupError(null);
+      setSelectedGroupId(null);
     }
   }, [open]);
 
@@ -86,9 +99,14 @@ export function ForwardModal({
     if (value) {
       setTarget(value);
       onSelectPath?.(value);
-      // Reset user selection when switching targets
+      // Reset selections when switching targets
       if (value !== 'user') {
         setSelectedUser(null);
+        setValidationState('idle');
+        setValidationMessage('');
+      }
+      if (value !== 'group') {
+        setSelectedGroupId(null);
       }
     }
   };
@@ -253,7 +271,9 @@ export function ForwardModal({
   }, [results, query]);
 
   const canContinue =
-    target === 'user' ? !!selectedUser && validationState === 'valid' : false; // group flow not ready yet
+    target === 'user'
+      ? !!selectedUser && validationState === 'valid'
+      : selectedGroupId !== null;
 
   const handleConfirm = () => {
     if (!canContinue) return;
@@ -460,6 +480,141 @@ export function ForwardModal({
                 >
                   <Typography variant="body2" color="text.secondary">
                     Start typing to search for a user.
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        )}
+
+        {!isUserFlow && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <TextField
+              label="Filter groups"
+              size="small"
+              value={groupFilter}
+              onChange={(e) => setGroupFilter(e.target.value)}
+              placeholder="Type group name or ID"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+                endAdornment: groupFilter ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      aria-label="Clear group filter"
+                      onClick={() => setGroupFilter('')}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
+              }}
+              fullWidth
+            />
+
+            <Box
+              sx={{
+                minHeight: 140,
+                maxHeight: 220,
+                overflowY: 'auto',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+              }}
+            >
+              {groupLoading ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 140,
+                    gap: 1,
+                  }}
+                >
+                  <CircularProgress size={18} />
+                  <Typography variant="body2" color="text.secondary">
+                    Loading your groups...
+                  </Typography>
+                </Box>
+              ) : groupError ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 140,
+                    px: 2,
+                    textAlign: 'center',
+                  }}
+                >
+                  <Typography variant="body2" color="error">
+                    {groupError}
+                  </Typography>
+                </Box>
+              ) : filteredGroups.length ? (
+                <List dense disablePadding>
+                  {filteredGroups.map((group) => (
+                    <ListItemButton
+                      key={group.groupId}
+                      selected={selectedGroupId === group.groupId}
+                      onClick={() => setSelectedGroupId(group.groupId)}
+                    >
+                      <ListItemText
+                        primary={group.groupName}
+                        secondary={`ID: ${group.groupId}${
+                          group.memberCount !== undefined
+                            ? ` · ${group.memberCount} members`
+                            : ''
+                        }`}
+                        primaryTypographyProps={{
+                          fontWeight:
+                            selectedGroupId === group.groupId ? 700 : 500,
+                        }}
+                      />
+                      {selectedGroupId === group.groupId && (
+                        <Chip
+                          label="Selected"
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      )}
+                    </ListItemButton>
+                  ))}
+                </List>
+              ) : groups.length ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 140,
+                    px: 2,
+                    textAlign: 'center',
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    No groups match your filter.
+                  </Typography>
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 140,
+                    px: 2,
+                    textAlign: 'center',
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    You are not a member of any groups.
                   </Typography>
                 </Box>
               )}
