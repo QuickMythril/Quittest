@@ -10,7 +10,7 @@ interface BuildPayloadArgs {
 
 export interface ForwardPayload {
   message?: string;
-  fullMessageObject?: string;
+  fullMessageObject?: any;
   bytes: number;
   link: string;
   snippet?: string;
@@ -118,8 +118,13 @@ export function buildForwardPayload({
     ].filter(Boolean),
   };
 
-  let fullMessageObject = JSON.stringify(doc);
-  let bytes = encoder.encode(fullMessageObject).length;
+  let fullMessageObject: any = {
+    messageText: doc,
+    images: [],
+    repliedTo: '',
+    version: 3,
+  };
+  let bytes = encoder.encode(JSON.stringify(fullMessageObject)).length;
 
   // If too big, truncate text content inside the blockquote paragraphs
   if (bytes > MAX_MESSAGE_BYTES && blockquoteContent.length) {
@@ -144,8 +149,11 @@ export function buildForwardPayload({
           : node
       ).filter(Boolean),
     };
-    fullMessageObject = JSON.stringify(newDoc);
-    bytes = encoder.encode(fullMessageObject).length;
+    fullMessageObject = {
+      ...fullMessageObject,
+      messageText: newDoc,
+    };
+    bytes = encoder.encode(JSON.stringify(fullMessageObject)).length;
   }
 
   // If still too big, fall back to link-only string message

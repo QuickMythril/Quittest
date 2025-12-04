@@ -784,11 +784,13 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
             ? ({
                 action: 'SEND_CHAT_MESSAGE',
                 groupId: selection.groupId,
+                fullMessageObject: payload.fullMessageObject,
                 message: payload.message,
               } as const)
             : ({
                 action: 'SEND_CHAT_MESSAGE',
                 recipient: await resolveAddress(),
+                fullMessageObject: payload.fullMessageObject,
                 message: payload.message,
               } as const);
 

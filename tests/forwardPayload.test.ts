@@ -16,7 +16,7 @@ describe('buildForwardPayload', () => {
   it('includes snippet and link when text provided', () => {
     const text = 'Hello Qortal friends!';
     const result = buildForwardPayload({ postId, postName, text });
-    const serialized = result.fullMessageObject || result.message || '';
+    const serialized = JSON.stringify(result.fullMessageObject || result.message || '');
     expect(serialized).toContain('qortal://APP/Quittest/post');
     expect(result.snippet).toBe(text);
     expect(result.bytes).toBeLessThanOrEqual(4000);
@@ -28,7 +28,7 @@ describe('buildForwardPayload', () => {
     const result = buildForwardPayload({ postId, postName, text });
     expect(result.bytes).toBeLessThanOrEqual(4000);
     expect(result.snippet).toBeDefined();
-    const serialized = result.fullMessageObject || result.message || '';
+    const serialized = JSON.stringify(result.fullMessageObject || result.message || '');
     expect(serialized.includes(postId)).toBe(true);
   });
 });
