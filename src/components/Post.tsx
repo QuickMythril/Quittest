@@ -17,6 +17,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import RepeatIcon from '@mui/icons-material/Repeat';
 import ShareIcon from '@mui/icons-material/Share';
+import SendIcon from '@mui/icons-material/Send';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -539,6 +540,7 @@ interface PostProps {
   onRetweet?: (postId: string, post: PostData) => void;
   onReply?: (postId: string, postName: string) => void;
   onShare?: (postId: string, postName: string) => void;
+  onForward?: (postId: string, postName: string) => void;
   onEdit?: (postId: string, post: PostData) => void;
   onDelete?: (post: PostData) => void;
   onPin?: (postId: string) => void;
@@ -555,6 +557,7 @@ export function Post({
   onRetweet = () => {},
   onReply = () => {},
   onShare = () => {},
+  onForward = () => {},
   onEdit,
   onDelete,
   onPin,
@@ -1344,6 +1347,21 @@ export function Post({
             >
               {likeCount}
             </Typography>
+          </ActionGroup>
+
+          <ActionGroup>
+            <ActionButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onForward(
+                  post.qortalMetadata.identifier,
+                  post.qortalMetadata.name
+                );
+              }}
+            >
+              <SendIcon fontSize="small" />
+            </ActionButton>
           </ActionGroup>
 
           <ActionGroup>
