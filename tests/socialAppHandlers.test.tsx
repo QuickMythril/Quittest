@@ -131,7 +131,7 @@ describe('SocialApp handlers', () => {
 
     await waitFor(() => {
       expect(copyToClipboard).toHaveBeenCalledWith(
-        'qortal://APP/Quitter/post/alice/id1'
+        'qortal://APP/Quittest/post/alice/id1'
       );
     });
   });

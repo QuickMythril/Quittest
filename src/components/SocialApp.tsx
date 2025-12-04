@@ -678,7 +678,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         showError('Failed to copy link. Please try again. Missing post name.');
         return;
       }
-      const postUrl = `qortal://APP/Quitter/post/${encodeURIComponent(postName)}/${encodeURIComponent(postId)}`;
+      const postUrl = `qortal://APP/Quittest/post/${encodeURIComponent(postName)}/${encodeURIComponent(postId)}`;
       await copyToClipboard(postUrl);
       showSuccess('Link copied to clipboard!');
     } catch (error) {
