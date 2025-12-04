@@ -566,7 +566,7 @@ export function NewPostInput({
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const query = e.target.value;
-    setMentionSearchQuery(query);
+    setMentionSearchQuery(query.toLowerCase());
 
     // Show loader immediately while we wait for debounced search
     if (query) {
@@ -802,10 +802,12 @@ export function NewPostInput({
             return `${prefix}${tag}`; // duplicates render as plain text
           }
           seenMentions.add(normalized);
-          // Only highlight mentions that came from popover selections (we track via suggestions state)
-          const isFromSuggestions =
-            mentionSuggestions.includes(tag.replace(/^@{?/, '').replace(/}$/, '')) ||
-            mentionSuggestions.includes(tag.replace(/^@/, ''));
+          // Only highlight mentions that came from popover selections (track via lowercased suggestions)
+          const normalizedSuggestions = mentionSuggestions.map((m) =>
+            m.toLowerCase()
+          );
+          const bare = tag.replace(/^@{?/, '').replace(/}$/, '').toLowerCase();
+          const isFromSuggestions = normalizedSuggestions.includes(bare);
           if (!isFromSuggestions) {
             return `${prefix}${tag}`; // unknown mentions render as plain text
           }
@@ -933,7 +935,7 @@ export function NewPostInput({
 
           // Show popover and set initial search query
           setShowMentionPopover(true);
-          setMentionSearchQuery(searchTerm);
+          setMentionSearchQuery(searchTerm.toLowerCase());
 
           // Show loader immediately while we wait for debounced search
           setIsMentionSearching(true);
