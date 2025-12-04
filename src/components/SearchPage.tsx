@@ -54,7 +54,9 @@ const Header = styled('div')(({ theme }) => ({
 const TopRow = styled('div')({
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
   gap: '16px',
+  flexWrap: 'wrap',
 });
 
 const BackButton = styled(IconButton)(({ theme }) => ({
@@ -104,12 +106,6 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
           : 'rgba(29, 155, 240, 0.08)',
     },
   },
-}));
-
-const ControlsRow = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(2),
 }));
 
 const Content = styled('div')(({ theme }) => ({
@@ -216,12 +212,28 @@ export function SearchPage({
     <PageContainer>
       <Header>
         <TopRow>
-          <BackButton onClick={handleBackClick}>
-            <ArrowBackIcon />
-          </BackButton>
-          <Typography variant="h6" fontWeight={700}>
-            Search
-          </Typography>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <BackButton onClick={handleBackClick}>
+              <ArrowBackIcon />
+            </BackButton>
+            <Typography variant="h6" fontWeight={700}>
+              Search
+            </Typography>
+          </div>
+
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel id="sort-by-label">Sort by</InputLabel>
+            <Select
+              labelId="sort-by-label"
+              value={sortOrder}
+              label="Sort by"
+              onChange={handleSortChange}
+            >
+              <MenuItem value="recent">Recent</MenuItem>
+              <MenuItem value="most">Most</MenuItem>
+              <MenuItem value="az">A-Z</MenuItem>
+            </Select>
+          </FormControl>
         </TopRow>
 
         <SearchSection>
@@ -286,22 +298,6 @@ export function SearchPage({
             Hashtags
           </ToggleButton>
         </StyledToggleButtonGroup>
-
-        <ControlsRow>
-          <FormControl size="small" sx={{ minWidth: 180 }}>
-            <InputLabel id="sort-by-label">Sort by</InputLabel>
-            <Select
-              labelId="sort-by-label"
-              value={sortOrder}
-              label="Sort by"
-              onChange={handleSortChange}
-            >
-              <MenuItem value="recent">Recent</MenuItem>
-              <MenuItem value="most">Most</MenuItem>
-              <MenuItem value="az">A-Z</MenuItem>
-            </Select>
-          </FormControl>
-        </ControlsRow>
       </Header>
 
       <Content>
