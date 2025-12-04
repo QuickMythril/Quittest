@@ -25,6 +25,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { useState, useEffect, MouseEvent, useMemo, useRef } from 'react';
 import { useSearchUsers, UserSearchResult } from '../hooks/useSearchUsers';
+import { useGlobal } from 'qapp-core';
 
 // Provided by the Qortal runtime
 declare const qortalRequest:
@@ -55,6 +56,7 @@ export function ForwardModal({
   onSelectPath,
   onConfirm,
 }: ForwardModalProps) {
+  const { auth } = useGlobal();
   const [target, setTarget] = useState<ForwardTarget>('user');
   const [query, setQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(
@@ -78,6 +80,7 @@ export function ForwardModal({
   const [groupLoading, setGroupLoading] = useState(false);
   const [groupError, setGroupError] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const authAddress = auth?.address;
 
   useEffect(() => {
     if (!open) {
@@ -264,6 +267,60 @@ export function ForwardModal({
     setValidationMessage(user.name.startsWith('Q') ? 'Valid address' : 'Valid name');
   };
 
+  // Fetch joined groups when switching to group tab (if authenticated)
+  useEffect(() => {
+    const fetchGroups = async () => {
+      if (isUserFlow) return;
+      if (!authAddress) {
+        setGroups([]);
+        setGroupError('Authenticate to load your groups.');
+        return;
+      }
+      if (groups.length) return;
+      setGroupLoading(true);
+      setGroupError(null);
+      try {
+        const origin =
+          typeof window !== 'undefined' && window.location
+            ? window.location.origin
+            : '';
+        const resp = await fetch(
+          `${origin}/groups/member/${encodeURIComponent(authAddress)}`
+        );
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        const mapped =
+          Array.isArray(data) && data.length
+            ? data.map((g: any) => ({
+                groupId: g.groupId,
+                groupName: g.groupName || `Group ${g.groupId}`,
+                memberCount: g.memberCount,
+              }))
+            : [];
+        setGroups(mapped);
+      } catch (err) {
+        console.error('Error fetching groups', err);
+        setGroupError(
+          err instanceof Error ? err.message : 'Failed to load groups'
+        );
+      } finally {
+        setGroupLoading(false);
+      }
+    };
+
+    fetchGroups();
+  }, [isUserFlow, authAddress, groups.length]);
+
+  const filteredGroups = useMemo(() => {
+    const filter = groupFilter.trim().toLowerCase();
+    if (!filter) return groups;
+    return groups.filter((g) => {
+      const idMatch = g.groupId.toString().includes(filter);
+      const nameMatch = g.groupName.toLowerCase().includes(filter);
+      return idMatch || nameMatch;
+    });
+  }, [groups, groupFilter]);
+
   const userOptions = useMemo(() => {
     if (!query.trim()) return results;
     return results;
@@ -281,6 +338,12 @@ export function ForwardModal({
         target,
         user: { name: selectedUser.name },
       });
+      onClose();
+    } else if (target === 'group' && selectedGroupId !== null) {
+      onConfirm?.({
+        target,
+        groupId: selectedGroupId,
+      } as any);
       onClose();
     }
   };
