@@ -386,6 +386,17 @@ const Hashtag = styled('span')(({ theme }) => ({
   },
 }));
 
+const Mention = styled('span')(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    textDecoration: 'underline',
+    color: theme.palette.primary.dark,
+  },
+}));
+
 const LinkText = styled('span')(({ theme }) => ({
   color: theme.palette.primary.main,
   fontWeight: 500,
@@ -717,6 +728,26 @@ export function Post({
     [onHashtagClick]
   );
 
+  const handleMentionClick = useCallback(
+    (event: React.MouseEvent, mention: string) => {
+      event.stopPropagation();
+      if (onUserClick) {
+        // Extract username from mention
+        // Handle both formats: @username and @{username with spaces}
+        let username = mention;
+        if (mention.startsWith('@{') && mention.endsWith('}')) {
+          // @{username with spaces} format
+          username = mention.slice(2, -1);
+        } else if (mention.startsWith('@')) {
+          // @username format
+          username = mention.substring(1);
+        }
+        onUserClick(username);
+      }
+    },
+    [onUserClick]
+  );
+
   const handleLinkClick = useCallback(
     async (event: React.MouseEvent, url: string) => {
       event.stopPropagation();
@@ -904,65 +935,122 @@ export function Post({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedVideoIndex, handleCloseVideoViewer]);
 
-  // Parse text and render with clickable hashtags and links
+  // Parse text and render with clickable hashtags, mentions, and links
   const renderTextWithHashtags = useMemo(() => {
     const text = post.data?.text || '';
     const shouldTruncate = text.length > MAX_TEXT_LENGTH && !isExpanded;
     const displayText = shouldTruncate ? text.slice(0, MAX_TEXT_LENGTH) : text;
 
-    // Combined regex to match hashtags, HTTP URLs, and qortal:// URLs
-    const combinedRegex = /(#\w+|https?:\/\/[^\s]+|qortal:\/\/[^\s]+)/g;
+    // Combined regex to match hashtags, mentions (both formats), HTTP URLs, and qortal:// URLs
+    // Only match @ and # when preceded by whitespace or at start of text to avoid matching email addresses
+    // Matches: #hashtag, @username, @{username with spaces}, http(s):// URLs, qortal:// URLs
+    const combinedRegex =
+      /(^|[\s])(@\{[^}]+\}|@[a-zA-Z0-9_-]+|#\w+)|(https?:\/\/[^\s]+|qortal:\/\/[^\s]+)/g;
 
-    const parts = displayText.split(combinedRegex);
+    const elements: (string | JSX.Element | null)[] = [];
+    let lastIndex = 0;
+    let matchIndex = 0;
 
-    const elements = parts.map((part, index) => {
-      if (!part) return null;
+    // Use matchAll to iterate through all matches
+    const matches = Array.from(displayText.matchAll(combinedRegex));
 
-      // Check if it's a hashtag
-      if (part.startsWith('#')) {
-        return (
-          <Hashtag key={index} onClick={(e) => handleHashtagClick(e, part)}>
-            {part}
-          </Hashtag>
-        );
+    matches.forEach((match) => {
+      const fullMatch = match[0];
+      const prefix = match[1] || ''; // Whitespace or start of string
+      const tagWithPrefix = match[2]; // @mention or #hashtag (with prefix requirement)
+      const url = match[3]; // URL (no prefix requirement)
+      const matchStart = match.index!;
+
+      // Add text before this match
+      if (matchStart > lastIndex) {
+        const textBefore = displayText.slice(lastIndex, matchStart);
+        if (textBefore) {
+          elements.push(textBefore);
+          matchIndex++;
+        }
       }
 
-      // Check if it's a qortal:// URL (skip qortal://use-embed/ links)
-      if (
-        part.startsWith('qortal://') &&
-        !part.startsWith('qortal://use-embed/')
-      ) {
-        return (
-          <QortalLinkText
-            key={index}
-            onClick={(e) => handleQortalLinkClick(e, part)}
-            onContextMenu={(e) => e.stopPropagation()}
-          >
-            {part}
-          </QortalLinkText>
-        );
+      // Add the prefix (whitespace) if it exists
+      if (prefix) {
+        elements.push(prefix);
+        matchIndex++;
       }
 
-      // Check if it's an HTTP/HTTPS URL
-      if (part.startsWith('http://') || part.startsWith('https://')) {
-        return (
-          <LinkText
-            key={index}
-            onClick={(e) => handleLinkClick(e, part)}
-            onContextMenu={(e) => handleLinkContextMenu(e, part)}
-          >
-            {part}
-          </LinkText>
-        );
+      // Handle the matched pattern
+      if (tagWithPrefix) {
+        const tag = tagWithPrefix;
+        // Check if it's a hashtag
+        if (tag.startsWith('#')) {
+          elements.push(
+            <Hashtag
+              key={matchIndex}
+              onClick={(e) => handleHashtagClick(e, tag)}
+            >
+              {tag}
+            </Hashtag>
+          );
+        }
+        // Check if it's a mention (@username or @{username with spaces})
+        else if (tag.startsWith('@')) {
+          // Display without curly braces for better appearance
+          const displayMention =
+            tag.startsWith('@{') && tag.endsWith('}')
+              ? '@' + tag.slice(2, -1)
+              : tag;
+          elements.push(
+            <Mention
+              key={matchIndex}
+              onClick={(e) => handleMentionClick(e, tag)}
+            >
+              {displayMention}
+            </Mention>
+          );
+        }
+        matchIndex++;
+      } else if (url) {
+        // Check if it's a qortal:// URL (skip qortal://use-embed/ links)
+        if (
+          url.startsWith('qortal://') &&
+          !url.startsWith('qortal://use-embed/')
+        ) {
+          elements.push(
+            <QortalLinkText
+              key={matchIndex}
+              onClick={(e) => handleQortalLinkClick(e, url)}
+              onContextMenu={(e) => e.stopPropagation()}
+            >
+              {url}
+            </QortalLinkText>
+          );
+        }
+        // Check if it's an HTTP/HTTPS URL
+        else if (url.startsWith('http://') || url.startsWith('https://')) {
+          elements.push(
+            <LinkText
+              key={matchIndex}
+              onClick={(e) => handleLinkClick(e, url)}
+              onContextMenu={(e) => handleLinkContextMenu(e, url)}
+            >
+              {url}
+            </LinkText>
+          );
+        }
+        matchIndex++;
       }
 
-      return part;
+      lastIndex = matchStart + fullMatch.length;
     });
+
+    // Add remaining text after the last match
+    if (lastIndex < displayText.length) {
+      elements.push(displayText.slice(lastIndex));
+    }
 
     return elements;
   }, [
     post.data?.text,
     handleHashtagClick,
+    handleMentionClick,
     handleLinkClick,
     handleLinkContextMenu,
     handleQortalLinkClick,
@@ -1081,7 +1169,9 @@ export function Post({
                 </Typography>
               </ParentPostHeader>
               {parentPost.data?.text && (
-                <ParentPostText>{parentPost.data.text}</ParentPostText>
+                <ParentPostText>
+                  {parentPost.data.text.replace(/@\{([^}]+)\}/g, '@$1')}
+                </ParentPostText>
               )}
               {parentPost.data?.images && parentPost.data.images.length > 0 && (
                 <Typography

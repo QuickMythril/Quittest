@@ -1,5 +1,5 @@
 import { styled } from '@mui/system';
-import { Typography, IconButton, Avatar, Button } from '@mui/material';
+import { Typography, IconButton, Avatar, Button, CircularProgress } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
@@ -22,6 +22,7 @@ import { FollowersList } from './FollowersList';
 import { UserFollowingList } from './UserFollowingList';
 import { useFollowingList } from '../hooks/useFollowingList';
 import { useFetchProfile } from '../hooks/useFetchProfile';
+import { useNameExists } from '../hooks/useNameExists';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -157,6 +158,21 @@ const LoadingContainer = styled('div')(({ theme }) => ({
   padding: theme.spacing(4),
 }));
 
+const ErrorContainer = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: theme.spacing(6),
+  textAlign: 'center',
+  gap: theme.spacing(2),
+}));
+
+const ErrorIcon = styled('div')(({ theme }) => ({
+  fontSize: '64px',
+  marginBottom: theme.spacing(2),
+}));
+
 interface UserFeedProps {
   userName: string;
   onBack?: () => void;
@@ -198,8 +214,11 @@ export function UserFeed({
     useState<string>('');
   const { identifierOperations, auth } = useGlobal();
 
+  // Check if name exists on Qortal
+  const { nameExists, isChecking: isCheckingName, error: nameError } = useNameExists(userName);
+
   // Follow hooks
-  const isFollowing = useIsFollowing(userName);
+  const { isFollowing, isLoading: isFollowLoading } = useIsFollowing(userName);
   const followerCount = useFollowerCount(userName);
   const { followingCount } = useFollowingList(userName);
   
@@ -328,6 +347,63 @@ export function UserFeed({
     ]
   );
 
+  // Show loading state while checking if name exists
+  if (isCheckingName) {
+    return (
+      <PageContainer>
+        <PageHeader>
+          <BackButton onClick={onBack} size="small">
+            <ArrowBackIcon />
+          </BackButton>
+          <div>
+            <Typography variant="h6" fontWeight={700}>
+              {userName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Loading...
+            </Typography>
+          </div>
+        </PageHeader>
+        <LoadingContainer>
+          <CircularProgress />
+        </LoadingContainer>
+      </PageContainer>
+    );
+  }
+
+  // Show error if name doesn't exist
+  if (!nameExists) {
+    return (
+      <PageContainer>
+        <PageHeader>
+          <BackButton onClick={onBack} size="small">
+            <ArrowBackIcon />
+          </BackButton>
+          <div>
+            <Typography variant="h6" fontWeight={700}>
+              {userName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Profile
+            </Typography>
+          </div>
+        </PageHeader>
+        <ErrorContainer>
+          <ErrorIcon>👤❌</ErrorIcon>
+          <Typography variant="h5" fontWeight={700} color="text.primary">
+            Name Not Found
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {nameError || `The name "@${userName}" is not registered on Qortal.`}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Please check the spelling and try again.
+          </Typography>
+        </ErrorContainer>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
       <PageHeader>
@@ -381,10 +457,19 @@ export function UserFeed({
           <FollowButton
             variant={isFollowing ? 'outlined' : 'contained'}
             color="primary"
-            startIcon={isFollowing ? <PersonRemoveIcon /> : <PersonAddIcon />}
+            startIcon={
+              isFollowLoading ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : isFollowing ? (
+                <PersonRemoveIcon />
+              ) : (
+                <PersonAddIcon />
+              )
+            }
             onClick={handleFollowClick}
+            disabled={isFollowLoading}
           >
-            {isFollowing ? 'Unfollow' : 'Follow'}
+            {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
           </FollowButton>
         )}
       </UserInfo>

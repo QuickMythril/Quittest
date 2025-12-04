@@ -4,6 +4,12 @@ import {
   Box,
   useTheme,
   CircularProgress,
+  Paper,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  TextField,
 } from '@mui/material';
 import { styled } from '@mui/system';
 import ImageIcon from '@mui/icons-material/Image';
@@ -18,6 +24,11 @@ import { useVideoMetadata } from '../hooks/useVideoMetadata';
 import { MediaAttachment } from '../utils/postQdn';
 import { useMediaInfo } from '../hooks/useMediaInfo';
 import { showError } from 'qapp-core';
+
+// Declare qortalRequest as a global function (provided by Qortal runtime)
+declare global {
+  function qortalRequest(params: any): Promise<any>;
+}
 
 // Lazy load heavy components
 const EmojiPicker = lazy(() =>
@@ -264,6 +275,31 @@ const StyledContentEditable = styled('div')(({ theme }) => ({
     borderRadius: '4px',
     padding: '2px 4px',
   },
+  '& .mention': {
+    color: theme.palette.primary.main,
+    fontWeight: 700,
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(29, 155, 240, 0.2)'
+        : 'rgba(29, 155, 240, 0.15)',
+    borderRadius: '4px',
+    padding: '2px 4px',
+  },
+}));
+
+const MentionPopover = styled(Paper)(({ theme }) => ({
+  position: 'absolute',
+  zIndex: 1000,
+  minWidth: '200px',
+  maxWidth: '300px',
+  boxShadow:
+    theme.palette.mode === 'dark'
+      ? '0 8px 32px rgba(0, 0, 0, 0.6)'
+      : '0 8px 32px rgba(0, 0, 0, 0.15)',
+  borderRadius: theme.spacing(1),
+  display: 'flex',
+  flexDirection: 'column',
+  maxHeight: '300px',
 }));
 
 interface NewPostInputProps {
@@ -310,6 +346,23 @@ export function NewPostInput({
   const videoInputRef = useRef<HTMLInputElement>(null);
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const mentionPopoverRef = useRef<HTMLDivElement>(null);
+  const mentionSearchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const mentionSearchInputRef = useRef<HTMLInputElement>(null);
+  const mentionPopoverPositionSetRef = useRef(false);
+
+  // Mention autocomplete state
+  const [showMentionPopover, setShowMentionPopover] = useState(false);
+  const [mentionPopoverPosition, setMentionPopoverPosition] = useState({
+    top: 0,
+    left: 0,
+  });
+  const [mentionSuggestions, setMentionSuggestions] = useState<string[]>([]);
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+  const [isMentionSearching, setIsMentionSearching] = useState(false);
+  const [mentionSearchQuery, setMentionSearchQuery] = useState('');
 
   // Fetch metadata for existing videos
   const existingVideoRefs = media
@@ -351,6 +404,39 @@ export function NewPostInput({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showEmojiPicker]);
+
+  // Close mention popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mentionPopoverRef.current &&
+        !mentionPopoverRef.current.contains(event.target as Node) &&
+        contentEditableRef.current &&
+        !contentEditableRef.current.contains(event.target as Node)
+      ) {
+        setShowMentionPopover(false);
+        setMentionSearchQuery('');
+        mentionPopoverPositionSetRef.current = false;
+      }
+    };
+
+    if (showMentionPopover) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMentionPopover]);
+
+  // Cleanup mention search timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (mentionSearchTimeoutRef.current) {
+        clearTimeout(mentionSearchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handlePost = async () => {
     if (text.trim() || media.length > 0) {
@@ -517,22 +603,28 @@ export function NewPostInput({
     setMedia(newMedia);
   };
 
-  // Format text with hashtag styling
+  // Format text with hashtag and mention styling
   const formatTextWithHashtags = (plainText: string): string => {
-    const hashtagRegex = /(#\w+)/g;
-    const parts = plainText.split(hashtagRegex);
+    // Escape HTML first
+    const escaped = plainText
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
 
-    return parts
-      .map((part) => {
-        if (part.match(hashtagRegex)) {
-          return `<span class="hashtag">${part}</span>`;
+    // Apply formatting for hashtags and mentions
+    // Only match @ and # when preceded by whitespace or at start of text
+    // Matches: #hashtag (with word boundary), @username, @{username with spaces}
+    return escaped.replace(
+      /(^|[\s])(@\{[^}]+\}|@[a-zA-Z0-9_-]+|#\w+)/g,
+      (match, prefix, tag) => {
+        if (tag.startsWith('#')) {
+          return `${prefix}<span class="hashtag">${tag}</span>`;
+        } else if (tag.startsWith('@')) {
+          return `${prefix}<span class="mention">${tag}</span>`;
         }
-        return part
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-      })
-      .join('');
+        return match;
+      }
+    );
   };
 
   // Extract plain text from HTML
@@ -609,6 +701,57 @@ export function NewPostInput({
     }
   };
 
+  // Function to search for users by name
+  const searchMentionUsers = (
+    searchTerm: string,
+    showLoader: boolean = true
+  ) => {
+    // Clear any existing search timeout
+    if (mentionSearchTimeoutRef.current) {
+      clearTimeout(mentionSearchTimeoutRef.current);
+    }
+
+    if (!searchTerm) {
+      setMentionSuggestions([]);
+      setIsMentionSearching(false);
+      return;
+    }
+
+    // Show loader immediately if requested
+    if (showLoader) {
+      setIsMentionSearching(true);
+    }
+
+    // Use setTimeout for debouncing the actual API call
+    mentionSearchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await qortalRequest({
+          action: 'SEARCH_NAMES',
+          query: searchTerm,
+          limit: 10,
+          prefix: true,
+        });
+
+        const users: string[] = [];
+        if (response && Array.isArray(response)) {
+          response.forEach((nameData: any) => {
+            const name = nameData.name || nameData;
+            if (name) {
+              users.push(name);
+            }
+          });
+        }
+
+        setMentionSuggestions(users);
+        setSelectedMentionIndex(0);
+        setIsMentionSearching(false);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        setIsMentionSearching(false);
+      }
+    }, 500); // 500ms debounce
+  };
+
   // Handle contentEditable input
   const handleContentEditableInput = () => {
     if (contentEditableRef.current) {
@@ -623,7 +766,54 @@ export function NewPostInput({
       const plainText = extractPlainText(contentEditableRef.current.innerHTML);
       setText(plainText);
 
-      // Re-format with hashtags and restore cursor
+      // Check for @ mention to show autocomplete
+      const textBeforeCursor = plainText.substring(0, cursorPosition);
+      // Match @ preceded by start of string or whitespace, followed by any alphanumeric/hyphen/underscore characters
+      // This ensures there's no character right behind the @
+      const mentionMatch = textBeforeCursor.match(/(?:^|\s)@([a-zA-Z0-9_-]*)$/);
+
+      if (mentionMatch) {
+        const searchTerm = mentionMatch[1];
+
+        // Don't show popover if user typed a space after @ (search term would be empty and they hit space)
+        // Check if the last character before cursor is a space after @
+        if (searchTerm === '' && textBeforeCursor.endsWith('@ ')) {
+          setShowMentionPopover(false);
+          mentionPopoverPositionSetRef.current = false;
+        } else if (searchTerm.length > 0) {
+          // Only calculate position once when first opening the popover
+          // This prevents the popover from moving as the user types
+          if (!mentionPopoverPositionSetRef.current && range) {
+            const rect = range.getBoundingClientRect();
+            const popoverPos = {
+              top: rect.bottom + window.scrollY + 5,
+              left: rect.left + window.scrollX,
+            };
+            setMentionPopoverPosition(popoverPos);
+            mentionPopoverPositionSetRef.current = true;
+          }
+
+          // Show popover and set initial search query
+          setShowMentionPopover(true);
+          setMentionSearchQuery(searchTerm);
+
+          // Show loader immediately while we wait for debounced search
+          setIsMentionSearching(true);
+
+          // Search for users using the search function
+          searchMentionUsers(searchTerm, false);
+        } else {
+          // If searchTerm is empty (just typed @), don't show popover yet
+          setShowMentionPopover(false);
+          mentionPopoverPositionSetRef.current = false;
+        }
+      } else {
+        setShowMentionPopover(false);
+        setMentionSearchQuery('');
+        mentionPopoverPositionSetRef.current = false;
+      }
+
+      // Re-format with hashtags and mentions, then restore cursor
       requestAnimationFrame(() => {
         if (contentEditableRef.current) {
           contentEditableRef.current.innerHTML =
@@ -685,6 +875,118 @@ export function NewPostInput({
     setShowEmojiPicker(false);
   };
 
+  // Handle mention selection from autocomplete
+  const handleMentionSelect = (mentionName: string) => {
+    if (contentEditableRef.current) {
+      const selection = window.getSelection();
+      if (selection?.rangeCount) {
+        const plainText = extractPlainText(
+          contentEditableRef.current.innerHTML
+        );
+        const cursorPosition = getCursorPosition(
+          contentEditableRef.current,
+          selection.getRangeAt(0)
+        );
+
+        // Find the @ symbol position
+        const textBeforeCursor = plainText.substring(0, cursorPosition);
+        const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+        if (lastAtIndex !== -1) {
+          // Format mention: wrap in {} only if name contains space
+          const formattedMention = mentionName.includes(' ')
+            ? `@{${mentionName}}`
+            : `@${mentionName}`;
+
+          // Replace from @ to cursor with formatted mention
+          const newText =
+            plainText.substring(0, lastAtIndex) +
+            formattedMention +
+            ' ' +
+            plainText.substring(cursorPosition);
+
+          setText(newText);
+
+          // Update the contentEditable
+          contentEditableRef.current.innerHTML =
+            formatTextWithHashtags(newText);
+
+          // Set cursor after the mention and space
+          const newCursorPosition = lastAtIndex + formattedMention.length + 1; // +1 for space
+          setCursorPosition(contentEditableRef.current, newCursorPosition);
+
+          // Focus back on the contentEditable
+          contentEditableRef.current.focus();
+        }
+      }
+    }
+
+    setShowMentionPopover(false);
+    setMentionSuggestions([]);
+    setMentionSearchQuery('');
+    mentionPopoverPositionSetRef.current = false;
+  };
+
+  // Handle mention search input change
+  const handleMentionSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const query = e.target.value;
+    setMentionSearchQuery(query);
+
+    // Show loader immediately while we wait for debounced search
+    if (query) {
+      setIsMentionSearching(true);
+    } else {
+      // If query is empty, clear results and hide loader
+      setMentionSuggestions([]);
+      setIsMentionSearching(false);
+    }
+
+    searchMentionUsers(query, false); // Don't show loader again since we already set it
+  };
+
+  // Handle keyboard navigation in mention popover
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showMentionPopover && mentionSuggestions.length > 0) {
+      // Don't handle arrow keys if focus is in the search input
+      const isSearchInputFocused =
+        document.activeElement === mentionSearchInputRef.current;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!isSearchInputFocused) {
+          setSelectedMentionIndex((prev) =>
+            prev < mentionSuggestions.length - 1 ? prev + 1 : prev
+          );
+        } else {
+          // Move focus from input to list
+          setSelectedMentionIndex(0);
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!isSearchInputFocused) {
+          setSelectedMentionIndex((prev) => (prev > 0 ? prev - 1 : 0));
+        }
+      } else if (e.key === 'Enter') {
+        if (!isSearchInputFocused && mentionSuggestions.length > 0) {
+          e.preventDefault();
+          handleMentionSelect(mentionSuggestions[selectedMentionIndex]);
+        }
+      } else if (e.key === 'Tab') {
+        if (mentionSuggestions.length > 0) {
+          e.preventDefault();
+          handleMentionSelect(mentionSuggestions[selectedMentionIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowMentionPopover(false);
+        setMentionSearchQuery('');
+        mentionPopoverPositionSetRef.current = false;
+      }
+    }
+  };
+
   return (
     <>
       <NewPostContainer>
@@ -698,6 +1000,7 @@ export function NewPostInput({
               contentEditable
               data-placeholder={placeholder}
               onInput={handleContentEditableInput}
+              onKeyDown={handleKeyDown}
               onPaste={(e) => {
                 // Check if there are any image files in the clipboard
                 const clipboardItems = e.clipboardData.items;
@@ -956,6 +1259,90 @@ export function NewPostInput({
           />
         </Suspense>
       )}
+
+      {showMentionPopover &&
+        createPortal(
+          <MentionPopover
+            ref={mentionPopoverRef}
+            sx={{
+              position: 'fixed',
+              top: `${mentionPopoverPosition.top}px`,
+              left: `${mentionPopoverPosition.left}px`,
+            }}
+          >
+            {/* Search input at the top - fixed, not scrollable */}
+            <Box
+              sx={{
+                padding: 1,
+                borderBottom: 1,
+                borderColor: 'divider',
+                flexShrink: 0,
+              }}
+            >
+              <TextField
+                inputRef={mentionSearchInputRef}
+                size="small"
+                fullWidth
+                placeholder="Search users..."
+                value={mentionSearchQuery}
+                onChange={handleMentionSearchChange}
+                autoComplete="off"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    fontSize: '14px',
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Results list - scrollable area */}
+            <Box sx={{ overflowY: 'auto', flexGrow: 1, minHeight: 0 }}>
+              {isMentionSearching ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: 2,
+                  }}
+                >
+                  <CircularProgress size={20} />
+                </Box>
+              ) : mentionSuggestions.length > 0 ? (
+                <List dense sx={{ padding: 0 }}>
+                  {mentionSuggestions.map((name, index) => (
+                    <ListItem key={name} disablePadding>
+                      <ListItemButton
+                        selected={index === selectedMentionIndex}
+                        onClick={() => handleMentionSelect(name)}
+                        sx={{
+                          '&.Mui-selected': {
+                            backgroundColor: theme.palette.primary.main,
+                            color: theme.palette.primary.contrastText,
+                            '&:hover': {
+                              backgroundColor: theme.palette.primary.dark,
+                            },
+                          },
+                        }}
+                      >
+                        <ListItemText primary={`@${name}`} />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Box
+                  sx={{ padding: 2, color: 'text.secondary', fontSize: '14px' }}
+                >
+                  {mentionSearchQuery
+                    ? 'No users found'
+                    : 'Type to search users'}
+                </Box>
+              )}
+            </Box>
+          </MentionPopover>,
+          document.body
+        )}
     </>
   );
 }

@@ -9,20 +9,28 @@ declare global {
 /**
  * Hook to check if the current user is following a specific user
  * @param targetUserName - The name of the user to check
- * @returns Boolean indicating whether the current user is following the target user
+ * @returns Object containing isFollowing boolean and isLoading boolean
  */
-export function useIsFollowing(targetUserName: string): boolean {
+export function useIsFollowing(targetUserName: string): { isFollowing: boolean; isLoading: boolean } {
   const { identifierOperations, auth, lists } = useGlobal();
   const [followIdentifier, setFollowIdentifier] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const listReturn = useListReturn(followIdentifier || null);
 
   useEffect(() => {
     const checkIfFollowing = async () => {
       try {
-        if (!targetUserName || !identifierOperations || !auth?.name) return;
+        setIsLoading(true);
+        if (!targetUserName || !identifierOperations || !auth?.name) {
+          setIsLoading(false);
+          return;
+        }
 
         // Don't check if user is trying to follow themselves
-        if (targetUserName === auth.name) return;
+        if (targetUserName === auth.name) {
+          setIsLoading(false);
+          return;
+        }
 
         // Create the follow identifier by hashing separately and concatenating
         const followHash = await identifierOperations.hashString(
@@ -36,6 +44,7 @@ export function useIsFollowing(targetUserName: string): boolean {
 
         if (!followHash || !userHash) {
           console.error('Failed to create follow identifier');
+          setIsLoading(false);
           return;
         }
 
@@ -50,12 +59,16 @@ export function useIsFollowing(targetUserName: string): boolean {
           limit: 0,
         });
         lists.addList(`${followIdentifier}-${auth.name}`, res);
-      } catch (error) {}
+      } catch (error) {
+        // Silent error handling
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     checkIfFollowing();
   }, [targetUserName, identifierOperations, auth?.name]);
 
-  return listReturn?.length > 0;
+  return { isFollowing: listReturn?.length > 0, isLoading };
 }
 

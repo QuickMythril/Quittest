@@ -14,6 +14,7 @@ import { CreateProfile } from '../components/CreateProfile';
 import { RefObject, useEffect, useRef } from 'react';
 import { useGlobal } from 'qapp-core';
 import { useFollowingStorage } from '../hooks/useFollowingStorage';
+import { useNotificationStorage } from '../hooks/useNotificationStorage';
 
 const LoadingContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -44,6 +45,9 @@ const Layout = () => {
 
   // Initialize following storage background sync
   useFollowingStorage();
+
+  // Initialize notification storage background sync
+  useNotificationStorage();
 
   const [hasProfile] = useAtom(hasProfileAtom);
   const [isLoadingProfile] = useAtom(isLoadingProfileAtom);

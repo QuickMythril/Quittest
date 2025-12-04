@@ -8,10 +8,15 @@
  */
 export async function copyToClipboard(text: string): Promise<void> {
   // Try modern clipboard API first
-  if (navigator.clipboard && navigator.clipboard.writeText) {
+  let processed = false;
+  try {
     await navigator.clipboard.writeText(text);
-    return;
+    processed = true;
+  } catch (error) {
+    console.error(error);
   }
+  if (processed) return;
+
   console.info('Using clipboard legacy fallback');
   // Fallback for older browsers or non-HTTPS contexts
   const textArea = document.createElement('textarea');
@@ -28,6 +33,8 @@ export async function copyToClipboard(text: string): Promise<void> {
     if (!successful) {
       throw new Error('execCommand copy failed');
     }
+  } catch (error) {
+    console.error(error);
   } finally {
     document.body.removeChild(textArea);
   }

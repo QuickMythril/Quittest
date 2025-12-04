@@ -14,6 +14,7 @@ import { Feed } from './Feed';
 import { PostPage } from './PostPage';
 import { UserFeed } from './UserFeed';
 import { SearchPage } from './SearchPage';
+import { NotificationsPage } from './NotificationsPage';
 import { Sidebar, RightSidebar } from './Sidebar';
 import { PostContent } from './NewPostInput';
 import {
@@ -25,6 +26,7 @@ import {
   usePublish,
 } from 'qapp-core';
 import { copyToClipboard } from '../utils/clipboard';
+import { NotificationSnackbar } from './NotificationSnackbar';
 
 // Lazy load the NewPostModal component (includes rich text editor)
 const NewPostModal = lazy(() =>
@@ -45,6 +47,7 @@ import {
 } from '../utils/postQdn';
 import { PostData } from './Post';
 import { useFollowsList } from '../hooks/useFollowsList';
+import { useNotifications } from '../hooks/useNotifications';
 import { useSetAtom } from 'jotai';
 import { followedUsersAtom } from '../state/global/follows';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -271,6 +274,10 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     refetch: refetchFollows,
   } = useFollowsList();
 
+  // Fetch notifications when user's name becomes available
+  // This hook stores the data in Jotai atoms and polls every 80 seconds
+  useNotifications();
+
   const setFollowedUsers = useSetAtom(followedUsersAtom);
 
   // Log follows data for debugging
@@ -318,6 +325,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const isPostPage = !!params.postId && !!params.name;
   const isUserPage = !!params.userName && !params.postId;
   const isSearchPage = location.pathname.startsWith('/search');
+  const isNotificationsPage = location.pathname === '/notifications';
   const isOwnProfile = isUserPage && params.userName === auth?.name;
 
   // Empty handler functions for now
@@ -331,6 +339,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
       }
     } else if (page === 'search') {
       navigate('/search/users');
+    } else if (page === 'notifications') {
+      navigate('/notifications');
     }
   };
 
@@ -342,6 +352,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     const userFollowersPattern = /^\/user\/[^/]+\/followers$/;
     const userFollowingPattern = /^\/user\/[^/]+\/following$/;
     const searchPagePattern = /^\/search\/(users|hashtags)/;
+    const notificationsPagePattern = /^\/notifications$/;
     const canGoBack =
       previousPathRef.current &&
       (postPagePattern.test(previousPathRef.current) ||
@@ -349,7 +360,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         userRepliesPattern.test(previousPathRef.current) ||
         userFollowersPattern.test(previousPathRef.current) ||
         userFollowingPattern.test(previousPathRef.current) ||
-        searchPagePattern.test(previousPathRef.current));
+        searchPagePattern.test(previousPathRef.current) ||
+        notificationsPagePattern.test(previousPathRef.current));
 
     if (canGoBack) {
       // Go back in history if we came from another post, user page (any tab), or search page
@@ -844,9 +856,11 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
                 ? 'profile'
                 : isSearchPage
                   ? 'search'
-                  : !isPostPage && !isUserPage
-                    ? 'home'
-                    : undefined
+                  : isNotificationsPage
+                    ? 'notifications'
+                    : !isPostPage && !isUserPage
+                      ? 'home'
+                      : undefined
             }
           />
         </LeftSection>
@@ -886,6 +900,12 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
               onDelete={handleDelete}
               onPin={handlePin}
               pinnedPostIds={pinnedPostIds}
+            />
+          ) : isNotificationsPage ? (
+            <NotificationsPage
+              onBack={handleBackToHome}
+              onUserClick={handleUserClick}
+              onPostClick={handlePostClick}
             />
           ) : isUserPage && params.userName ? (
             <UserFeed
@@ -1002,6 +1022,13 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           <KeyboardArrowUpIcon />
         </ScrollToTopButton>
       </Zoom>
+
+      {/* Notification Snackbar */}
+      <NotificationSnackbar
+        onNotificationClick={() => {
+          navigate('/notifications');
+        }}
+      />
     </AppContainer>
   );
 }

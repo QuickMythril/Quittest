@@ -2,8 +2,21 @@ import { styled } from '@mui/system';
 import HomeIcon from '@mui/icons-material/Home';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { Badge } from '@mui/material';
 import { NameSwitcher } from './NameSwitcher';
 import { WhatsHappening } from './WhatsHappening';
+import { useAtom, useAtomValue } from 'jotai';
+import {
+  notificationsAtom,
+  hasUnreadNotificationsAtom,
+} from '../state/global/notifications';
+import { useGlobal } from 'qapp-core';
+import { useEffect } from 'react';
+import {
+  getLastViewedTimestamp,
+  setLastViewedNotificationsTimestamp,
+} from '../utils/notificationTimestamp';
 
 const SidebarContainer = styled('div')(({ theme }) => ({
   width: '290px',
@@ -132,7 +145,6 @@ const TweetButtonIcon = styled('span')(({ theme }) => ({
   },
 }));
 
-
 interface SidebarProps {
   onNavigate?: (page: string) => void;
   onTweet?: () => void;
@@ -147,6 +159,49 @@ export function Sidebar({
   onTweet = () => {},
   activePage = 'home',
 }: SidebarProps) {
+  const { auth } = useGlobal();
+  const notifications = useAtomValue(notificationsAtom);
+  const [hasUnread, setHasUnread] = useAtom(hasUnreadNotificationsAtom);
+
+  // Check for unread notifications
+  useEffect(() => {
+    if (!auth?.name || notifications.length === 0) {
+      setHasUnread(false);
+      return;
+    }
+
+    const lastViewed = getLastViewedTimestamp(auth.name);
+    const now = Date.now();
+    const fortyEightHoursAgo = now - 48 * 60 * 60 * 1000; // 48 hours in milliseconds
+
+    // Find the latest notification timestamp
+    const latestNotificationTimestamp = Math.max(
+      ...notifications.map((n) => n.timestamp)
+    );
+
+    // Don't show indicator if latest notification is older than 48 hours
+    if (latestNotificationTimestamp < fortyEightHoursAgo) {
+      setHasUnread(false);
+      return;
+    }
+
+    // Check if there's any notification newer than last viewed timestamp
+    const hasNewNotifications = notifications.some(
+      (notification) => notification.timestamp > lastViewed
+    );
+
+    setHasUnread(hasNewNotifications);
+  }, [notifications, auth?.name, setHasUnread]);
+
+  const handleNotificationsClick = () => {
+    // Update last viewed timestamp when clicking notifications
+    if (auth?.name) {
+      setLastViewedNotificationsTimestamp(auth.name);
+      setHasUnread(false);
+    }
+    onNavigate('notifications');
+  };
+
   return (
     <SidebarContainer>
       <NavButton
@@ -163,13 +218,30 @@ export function Sidebar({
         <SearchIcon />
         <NavLabel>Search</NavLabel>
       </NavButton>
-      {/* <NavButton
+      <NavButton
         active={activePage === 'notifications'}
-        onClick={() => onNavigate('notifications')}
+        onClick={handleNotificationsClick}
       >
-        <NotificationsIcon />
+        <Badge
+          color="primary"
+          variant="dot"
+          invisible={!hasUnread}
+          sx={{
+            '& .MuiBadge-dot': {
+              backgroundColor: '#1d9bf0',
+              boxShadow: '0 0 0 2px rgba(0, 0, 0, 0.1)',
+            },
+          }}
+        >
+          <NotificationsIcon
+            sx={{
+              color: hasUnread ? '#1d9bf0' : 'inherit',
+              transition: 'color 0.2s ease',
+            }}
+          />
+        </Badge>
         <NavLabel>Notifications</NavLabel>
-      </NavButton> */}
+      </NavButton>
       {/* <NavButton active={activePage === 'messages'} onClick={() => onNavigate('messages')}>
         <MailIcon />
         <NavLabel>Messages</NavLabel>
