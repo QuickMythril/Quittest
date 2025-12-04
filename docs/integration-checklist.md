@@ -8,7 +8,7 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [x] Name existence UX: cached name-existence check, loading/not-found states on profile, and related atoms/utils.
 - [x] Mention/reply metadata: hash and embed mentions/replies into publish/update descriptions for notification discovery.
 - [ ] Mentions: @-autocomplete/search in composer, styled mentions in contentEditable, clickable mentions in posts, and mention parsing in parent-post previews.
-- [ ] Notification sound: Web Audio chime utility and settings/test trigger.
+- [x] Notification sound: Web Audio chime utility and settings/test trigger.
 - [ ] Notification storage plumbing: IndexedDB/localforage store for shown IDs and preferences; initialization at layout bootstrap.
 - [ ] Notifications UI: `/notifications` route/page with tabs and settings; sidebar badge/nav; snackbar click-through.
 - [ ] Notifications: polling followers/mentions/replies, unread tracking, persisted preferences (snackbar/sound), last-viewed timestamp, and snackbar popup.
@@ -55,7 +55,7 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [ ] src/styles/Layout.tsx
 
 ## Notification sound
-- [ ] src/utils/notificationSound.ts
+- [x] src/utils/notificationSound.ts
 - [ ] src/components/NotificationSnackbar.tsx
 - [ ] src/components/NotificationsPage.tsx
 
