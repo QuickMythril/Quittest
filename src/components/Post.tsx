@@ -387,6 +387,17 @@ const Hashtag = styled('span')(({ theme }) => ({
   },
 }));
 
+const Mention = styled('span')(({ theme }) => ({
+  color: theme.palette.primary.main,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    textDecoration: 'underline',
+    color: theme.palette.primary.dark,
+  },
+}));
+
 const LinkText = styled('span')(({ theme }) => ({
   color: theme.palette.primary.main,
   fontWeight: 500,
