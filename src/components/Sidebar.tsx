@@ -19,6 +19,8 @@ const SidebarContainer = styled('div')(({ theme }) => ({
   // Hide scrollbar on small screens for cleaner look
   [theme.breakpoints.down('md')]: {
     width: '68px',
+    alignItems: 'center',
+    gap: theme.spacing(1),
     '&::-webkit-scrollbar': {
       width: '4px',
     },
@@ -45,6 +47,7 @@ const NavButton = styled('button')<{ active?: boolean }>(
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
     overflow: 'hidden',
+    minWidth: '52px',
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -75,6 +78,7 @@ const NavButton = styled('button')<{ active?: boolean }>(
       height: '52px',
       justifyContent: 'center',
       padding: theme.spacing(1.5),
+      borderRadius: '50%',
     },
   })
 );
