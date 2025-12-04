@@ -782,6 +782,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           postName: forwardTarget.name,
           text: forwardTarget.text,
           created: forwardTarget.created,
+          hasImages: forwardTarget.hasImages,
+          hasVideos: forwardTarget.hasVideos,
         });
 
         const resolveAddress = async () => {
