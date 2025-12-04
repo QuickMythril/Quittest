@@ -11,6 +11,7 @@ import {
   Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
 import TagIcon from '@mui/icons-material/Tag';
@@ -167,6 +168,13 @@ export function SearchPage({
     setInputValue(event.target.value);
   };
 
+  const clearSearch = () => {
+    setInputValue('');
+    const params = new URLSearchParams(searchParams);
+    params.delete('q');
+    setSearchParams(params);
+  };
+
   const executeSearch = () => {
     if (inputValue.trim()) {
       setSearchParams({ q: inputValue.trim() });
@@ -216,6 +224,18 @@ export function SearchPage({
                   <SearchIcon />
                 </InputAdornment>
               ),
+              endAdornment: inputValue ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="Clear search"
+                    size="small"
+                    onClick={clearSearch}
+                    edge="end"
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ) : undefined,
               sx: {
                 borderRadius: '24px',
                 backgroundColor: (theme) =>
