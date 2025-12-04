@@ -806,7 +806,11 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           selection.target === 'group'
             ? ({
                 action: 'SEND_CHAT_MESSAGE',
-                groupId: selection.groupId,
+                // send as string so groupId 0 (General Chat) is not treated as falsy
+                groupId:
+                  selection.groupId !== undefined && selection.groupId !== null
+                    ? String(selection.groupId)
+                    : undefined,
                 fullMessageObject: payload.fullMessageObject,
                 message: payload.message,
               } as const)
