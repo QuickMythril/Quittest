@@ -15,10 +15,12 @@ const SidebarContainer = styled('div')(({ theme }) => ({
   top: 0,
   height: '100vh',
   overflowY: 'auto',
+  overflowX: 'hidden',
   scrollBehavior: 'smooth',
   // Hide scrollbar on small screens for cleaner look
   [theme.breakpoints.down('md')]: {
-    width: '68px',
+    width: '84px',
+    padding: theme.spacing(1),
     alignItems: 'center',
     gap: theme.spacing(1),
     '&::-webkit-scrollbar': {
