@@ -178,9 +178,6 @@ const LeftSection = styled('div')(({ theme }) => ({
       ? 'rgba(21, 32, 43, 0.6)'
       : 'rgba(255, 255, 255, 0.6)',
   backdropFilter: 'blur(10px)',
-  [theme.breakpoints.down('lg')]: {
-    display: 'none',
-  },
 }));
 
 const CenterSection = styled('div')({
