@@ -37,6 +37,7 @@ type ForwardTarget = 'user' | 'group';
 export interface ForwardSelection {
   target: ForwardTarget;
   user?: { name: string; address?: string };
+  groupId?: number;
 }
 
 interface ForwardModalProps {
