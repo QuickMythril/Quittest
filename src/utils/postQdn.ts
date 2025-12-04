@@ -460,6 +460,34 @@ export async function publishPost({
       keywordString = normalizeKeywords(hashtagMatches);
     }
 
+    // Extract @ mentions from post text (only take the first one)
+    // Match two formats:
+    // 1. @{username with spaces} - wrapped format for names with special chars
+    // 2. @username - simple format for names without spaces
+    const mentionMatch = text.match(
+      /@\{([^}]+)\}|(?:^|\s)@([a-zA-Z0-9_-]+)(?=\s|$)/
+    );
+    let mentionString = '';
+
+    if (mentionMatch) {
+      // Get the mentioned name (without the @ symbol and {})
+      // mentionMatch[1] contains @{name with spaces} format
+      // mentionMatch[2] contains simple @username format
+      const mentionedName = mentionMatch[1] || mentionMatch[2];
+
+      if (mentionedName) {
+        // Hash the mentioned name using identifierOperations
+        const hashedName = await identifierOperations.hashString(
+          mentionedName,
+          EnumCollisionStrength.HIGH
+        );
+
+        if (hashedName) {
+          mentionString = `~@${hashedName}~`;
+        }
+      }
+    }
+
     // Convert post metadata to base64
     const postBase64 = await objectToBase64(post);
 
@@ -471,9 +499,18 @@ export async function publishPost({
       name: userName,
     };
 
-    // Only add description if we have keywords
+    // Build description with hashtags and @ mention
+    const descriptionParts: string[] = [];
     if (keywordString) {
-      postResource.description = keywordString;
+      descriptionParts.push(keywordString);
+    }
+    if (mentionString) {
+      descriptionParts.push(mentionString);
+    }
+
+    // Only add description if we have keywords or mention
+    if (descriptionParts.length > 0) {
+      postResource.description = descriptionParts.join(',');
     }
 
     resources.push(postResource);
@@ -707,6 +744,45 @@ export async function publishReply({
       keywordString = normalizeKeywords(hashtagMatches);
     }
 
+    // Extract @ mentions from reply text (only take the first one)
+    // Match two formats:
+    // 1. @{username with spaces} - wrapped format for names with special chars
+    // 2. @username - simple format for names without spaces
+    const mentionMatch = text.match(
+      /@\{([^}]+)\}|(?:^|\s)@([a-zA-Z0-9_-]+)(?=\s|$)/
+    );
+    let mentionString = '';
+
+    if (mentionMatch) {
+      // Get the mentioned name (without the @ symbol and {})
+      // mentionMatch[1] contains @{name with spaces} format
+      // mentionMatch[2] contains simple @username format
+      const mentionedName = mentionMatch[1] || mentionMatch[2];
+
+      if (mentionedName) {
+        // Hash the mentioned name using identifierOperations
+        const hashedName = await identifierOperations.hashString(
+          mentionedName,
+          EnumCollisionStrength.HIGH
+        );
+
+        if (hashedName) {
+          mentionString = `~@${hashedName}~`;
+        }
+      }
+    }
+
+    // Add reply indicator with hashed name of the person being replied to
+    let replyString = '';
+    const hashedReplyToName = await identifierOperations.hashString(
+      replyToPostName,
+      EnumCollisionStrength.HIGH
+    );
+
+    if (hashedReplyToName) {
+      replyString = `~rply${hashedReplyToName}~`;
+    }
+
     // Convert reply metadata to base64
     const replyBase64 = await objectToBase64(reply);
 
@@ -718,9 +794,21 @@ export async function publishReply({
       name: userName,
     };
 
-    // Only add description if we have keywords
+    // Build description with hashtags, @ mention, and reply indicator
+    const descriptionParts: string[] = [];
     if (keywordString) {
-      replyResource.description = keywordString;
+      descriptionParts.push(keywordString);
+    }
+    if (mentionString) {
+      descriptionParts.push(mentionString);
+    }
+    if (replyString) {
+      descriptionParts.push(replyString);
+    }
+
+    // Only add description if we have keywords, mention, or reply indicator
+    if (descriptionParts.length > 0) {
+      replyResource.description = descriptionParts.join(',');
     }
 
     resources.push(replyResource);
