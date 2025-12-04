@@ -9,6 +9,11 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -101,6 +106,12 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
   },
 }));
 
+const ControlsRow = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+}));
+
 const Content = styled('div')(({ theme }) => ({
   padding: theme.spacing(2),
 }));
@@ -120,6 +131,7 @@ interface SearchPageProps {
 }
 
 type SearchType = 'users' | 'hashtags';
+type SortOrder = 'recent' | 'most' | 'az';
 
 export function SearchPage({
   onBack,
@@ -144,6 +156,7 @@ export function SearchPage({
 
   // Local input state (not submitted to URL yet)
   const [inputValue, setInputValue] = useState(searchParams.get('q') || '');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('recent');
 
   const handleSearchTypeChange = (
     _event: React.MouseEvent<HTMLElement>,
@@ -162,6 +175,10 @@ export function SearchPage({
         );
       }
     }
+  };
+
+  const handleSortChange = (event: SelectChangeEvent) => {
+    setSortOrder(event.target.value as SortOrder);
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -269,13 +286,33 @@ export function SearchPage({
             Hashtags
           </ToggleButton>
         </StyledToggleButtonGroup>
+
+        <ControlsRow>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel id="sort-by-label">Sort by</InputLabel>
+            <Select
+              labelId="sort-by-label"
+              value={sortOrder}
+              label="Sort by"
+              onChange={handleSortChange}
+            >
+              <MenuItem value="recent">Recent</MenuItem>
+              <MenuItem value="most">Most</MenuItem>
+              <MenuItem value="az">A-Z</MenuItem>
+            </Select>
+          </FormControl>
+        </ControlsRow>
       </Header>
 
       <Content>
         {searchType === 'users' ? (
-          <UserSearchResults onUserClick={onUserClick} />
+          <UserSearchResults
+            onUserClick={onUserClick}
+            sortOrder={sortOrder}
+          />
         ) : (
           <HashtagSearchResults
+            sortOrder={sortOrder}
             onUserClick={onUserClick}
             onPostClick={onPostClick}
             onLike={onLike}

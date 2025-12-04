@@ -5,6 +5,7 @@ import { ENTITY_POST, ENTITY_ROOT } from '../constants/qdn';
 export interface HashtagCount {
   tag: string;
   count: number;
+  lastSeenIndex?: number;
 }
 
 /**
@@ -34,22 +35,36 @@ export function useTrendingHashtags(limit = 10) {
       }
       const response = await res.json();
 
-      const topicCounts = new Map<string, number>();
-      for (const resource of response) {
+      const topicCounts = new Map<
+        string,
+        { count: number; lastSeenIndex?: number }
+      >();
+      response.forEach((resource: any, index: number) => {
         const desc = resource?.metadata?.description;
         if (!desc || typeof desc !== 'string') continue;
         const regex = /~#(\w+)~/g;
         let match;
         while ((match = regex.exec(desc)) !== null) {
           const tag = `#${match[1].toLowerCase()}`;
-          topicCounts.set(tag, (topicCounts.get(tag) || 0) + 1);
+          const existing = topicCounts.get(tag);
+          topicCounts.set(tag, {
+            count: (existing?.count || 0) + 1,
+            lastSeenIndex:
+              existing?.lastSeenIndex !== undefined
+                ? existing.lastSeenIndex
+                : index, // lower index => more recent in reversed results
+          });
         }
-      }
+      });
 
       const sorted = Array.from(topicCounts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, limit)
-        .map(([tag, count]) => ({ tag, count }));
+        .map(([tag, data]) => ({
+          tag,
+          count: data.count,
+          lastSeenIndex: data.lastSeenIndex,
+        }))
+        .sort((a, b) => (b.count || 0) - (a.count || 0))
+        .slice(0, limit);
 
       setTags(sorted);
     } catch (err) {

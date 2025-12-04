@@ -110,7 +110,7 @@ export function useSearchUsers() {
         setIsLoading(false);
       }
     }
-  }, []);
+  }, [identifierOperations]);
 
   return {
     results,

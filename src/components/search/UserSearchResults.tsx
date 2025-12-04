@@ -66,9 +66,13 @@ const LoadingContainer = styled('div')(({ theme }) => ({
 
 interface UserSearchResultsProps {
   onUserClick?: (userName: string) => void;
+  sortOrder?: 'recent' | 'most' | 'az';
 }
 
-export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
+export function UserSearchResults({
+  onUserClick,
+  sortOrder = 'recent',
+}: UserSearchResultsProps) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { auth } = useGlobal();
@@ -97,6 +101,28 @@ export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
     } else {
       navigate(`/user/${userName}`);
     }
+  };
+
+  const sortUsers = (users: typeof userResults) => {
+    if (sortOrder === 'az') {
+      return [...users].sort((a, b) => a.name.localeCompare(b.name));
+    }
+    if (sortOrder === 'most') {
+      return [...users].sort(
+        (a, b) =>
+          (b.postCount || 0) - (a.postCount || 0) ||
+          a.name.localeCompare(b.name)
+      );
+    }
+    // recent: keep API order
+    return users;
+  };
+
+  const sortRecentProfiles = (users: typeof recentProfiles) => {
+    if (sortOrder === 'az' || sortOrder === 'most') {
+      return sortUsers(users);
+    }
+    return users;
   };
 
   const hasResults = userResults.length > 0;
@@ -137,7 +163,7 @@ export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
 
     return (
       <ResultsContainer>
-        {recentProfiles.map((user) => (
+        {sortRecentProfiles(recentProfiles).map((user) => (
           <UserResultCard
             key={user.name}
             userName={user.name}
@@ -176,7 +202,7 @@ export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
 
   return (
     <ResultsContainer>
-      {userResults.map((user) => (
+      {sortUsers(userResults).map((user) => (
         <UserResultCard
           key={user.name}
           userName={user.name}

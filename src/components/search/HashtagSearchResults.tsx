@@ -40,6 +40,7 @@ interface HashtagSearchResultsProps {
   onDelete?: (post: PostData) => void;
   onPin?: (postId: string) => void;
   pinnedPostIds?: Set<string>;
+  sortOrder?: 'recent' | 'most' | 'az';
 }
 
 export function HashtagSearchResults({
@@ -53,6 +54,7 @@ export function HashtagSearchResults({
   onDelete,
   onPin,
   pinnedPostIds = new Set(),
+  sortOrder = 'recent',
 }: HashtagSearchResultsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -165,13 +167,48 @@ export function HashtagSearchResults({
         )
       : [];
 
+  const sortTags = useCallback(
+    (tags: { tag: string; count?: number; lastSeenIndex?: number }[]) => {
+      const clone = [...tags];
+      if (sortOrder === 'az') {
+        return clone.sort((a, b) => a.tag.localeCompare(b.tag));
+      }
+      if (sortOrder === 'most') {
+        return clone.sort(
+          (a, b) =>
+            (b.count || 0) - (a.count || 0) ||
+            (a.lastSeenIndex ?? Number.MAX_SAFE_INTEGER) -
+              (b.lastSeenIndex ?? Number.MAX_SAFE_INTEGER)
+        );
+      }
+      // recent: lower lastSeenIndex means more recent; fall back to count
+      return clone.sort(
+        (a, b) =>
+          (a.lastSeenIndex ?? Number.MAX_SAFE_INTEGER) -
+            (b.lastSeenIndex ?? Number.MAX_SAFE_INTEGER) ||
+          (b.count || 0) - (a.count || 0)
+      );
+    },
+    [sortOrder]
+  );
+
+  const sortedTrending = useMemo(
+    () => sortTags(trendingTags),
+    [trendingTags, sortTags]
+  );
+
+  const sortedRelated = useMemo(
+    () => sortTags(relatedTags),
+    [relatedTags, sortTags]
+  );
+
   const showRelatedHashtags = hasSearchResults === false;
 
   if (!searchQuery) {
     return (
       <HashtagList
         title="Trending hashtags"
-        tags={trendingTags.map(({ tag, count }) => ({ tag, count }))}
+        tags={sortedTrending.map(({ tag, count }) => ({ tag, count }))}
         isLoading={isLoadingTrending}
         error={trendingError}
         onSelect={(tag) => setSearchParams({ q: tag })}
@@ -211,7 +248,7 @@ export function HashtagSearchResults({
       {showRelatedHashtags && (
         <HashtagList
           title="Related hashtags"
-          tags={relatedTags.map(({ tag, count }) => ({ tag, count }))}
+          tags={sortedRelated.map(({ tag, count }) => ({ tag, count }))}
           isLoading={isLoadingTrending}
           error={trendingError}
           emptyMessage="No matching hashtags"
