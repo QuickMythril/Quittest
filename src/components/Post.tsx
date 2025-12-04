@@ -540,7 +540,13 @@ interface PostProps {
   onRetweet?: (postId: string, post: PostData) => void;
   onReply?: (postId: string, postName: string) => void;
   onShare?: (postId: string, postName: string) => void;
-  onForward?: (postId: string, postName: string, text?: string) => void;
+  onForward?: (
+    postId: string,
+    postName: string,
+    text?: string,
+    author?: string,
+    created?: number
+  ) => void;
   onEdit?: (postId: string, post: PostData) => void;
   onDelete?: (post: PostData) => void;
   onPin?: (postId: string) => void;
@@ -1357,7 +1363,9 @@ export function Post({
                 onForward(
                   post.qortalMetadata.identifier,
                   post.qortalMetadata.name,
-                  post.data?.text || ''
+                  post.data?.text || '',
+                  post.qortalMetadata.name,
+                  post.data?.created
                 );
               }}
             >
