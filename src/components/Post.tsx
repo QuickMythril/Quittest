@@ -949,6 +949,7 @@ export function Post({
 
     const elements: (string | JSX.Element | null)[] = [];
     const seenHashtags = new Set<string>();
+    const seenMentions = new Set<string>();
     let lastIndex = 0;
     let matchIndex = 0;
 
@@ -999,19 +1000,25 @@ export function Post({
         }
         // Check if it's a mention (@username or @{username with spaces})
         else if (tag.startsWith('@')) {
-          // Display without curly braces for better appearance
-          const displayMention =
-            tag.startsWith('@{') && tag.endsWith('}')
-              ? '@' + tag.slice(2, -1)
-              : tag;
-          elements.push(
-            <Mention
-              key={matchIndex}
-              onClick={(e) => handleMentionClick(e, tag)}
-            >
-              {displayMention}
-            </Mention>
-          );
+          const normalized = tag.toLowerCase();
+          if (seenMentions.has(normalized)) {
+            elements.push(tag);
+          } else {
+            seenMentions.add(normalized);
+            // Display without curly braces for better appearance
+            const displayMention =
+              tag.startsWith('@{') && tag.endsWith('}')
+                ? '@' + tag.slice(2, -1)
+                : tag;
+            elements.push(
+              <Mention
+                key={matchIndex}
+                onClick={(e) => handleMentionClick(e, tag)}
+              >
+                {displayMention}
+              </Mention>
+            );
+          }
         }
         matchIndex++;
       } else if (url) {

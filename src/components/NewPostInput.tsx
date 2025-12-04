@@ -781,6 +781,7 @@ export function NewPostInput({
       .replace(/>/g, '&gt;');
 
     const seenHashtags = new Set<string>();
+    const seenMentions = new Set<string>();
 
     // Apply formatting for hashtags and mentions
     // Only match @ and # when preceded by whitespace or at start of text
@@ -796,6 +797,18 @@ export function NewPostInput({
           seenHashtags.add(normalized);
           return `${prefix}<span class="hashtag">${tag}</span>`;
         } else if (tag.startsWith('@')) {
+          const normalized = tag.toLowerCase();
+          if (seenMentions.has(normalized)) {
+            return `${prefix}${tag}`; // duplicates render as plain text
+          }
+          seenMentions.add(normalized);
+          // Only highlight mentions that came from popover selections (we track via suggestions state)
+          const isFromSuggestions =
+            mentionSuggestions.includes(tag.replace(/^@{?/, '').replace(/}$/, '')) ||
+            mentionSuggestions.includes(tag.replace(/^@/, ''));
+          if (!isFromSuggestions) {
+            return `${prefix}${tag}`; // unknown mentions render as plain text
+          }
           return `${prefix}<span class="mention">${tag}</span>`;
         }
         return match;
