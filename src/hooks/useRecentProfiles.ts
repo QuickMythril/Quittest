@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useGlobal } from 'qapp-core';
 import { UserSearchResult } from './useSearchUsers';
+import { ENTITY_POST, ENTITY_ROOT } from '../constants/qdn';
 
 /**
  * Fetches the most recently published Quitter profiles.
@@ -14,7 +15,11 @@ export function useRecentProfiles(limit = 20) {
   const requestIdRef = useRef(0);
 
   const fetchRecentProfiles = useCallback(async () => {
-    if (!identifierOperations?.createSingleIdentifier) return;
+    if (
+      !identifierOperations?.createSingleIdentifier ||
+      !identifierOperations?.buildSearchPrefix
+    )
+      return;
 
     setIsLoading(true);
     setError(null);
@@ -26,6 +31,11 @@ export function useRecentProfiles(limit = 20) {
       if (!profileId) {
         throw new Error('Failed to build profile identifier');
       }
+
+      const postPrefix = await identifierOperations.buildSearchPrefix(
+        ENTITY_POST,
+        ENTITY_ROOT
+      );
 
       const res = await fetch(
         `/arbitrary/resources/search?service=METADATA&identifier=${encodeURIComponent(profileId)}&prefix=false&limit=${limit}&reverse=true&mode=ALL`
@@ -51,12 +61,16 @@ export function useRecentProfiles(limit = 20) {
         }
       }
 
-      // Fetch post counts for these users
+      // Fetch post counts for these users (Quitter posts only)
       const withCounts = await Promise.all(
         names.map(async (user) => {
           try {
             const res = await fetch(
-              `/arbitrary/resources/search?service=DOCUMENT&identifier=&name=${encodeURIComponent(user.name)}&prefix=false&limit=0&reverse=false&mode=ALL`
+              `/arbitrary/resources/search?service=DOCUMENT&identifier=${encodeURIComponent(
+                postPrefix
+              )}&name=${encodeURIComponent(
+                user.name
+              )}&prefix=true&limit=1000&reverse=false&mode=ALL`
             );
             if (res?.ok) {
               const resources = await res.json();

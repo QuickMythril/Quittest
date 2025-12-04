@@ -1,4 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { useGlobal } from 'qapp-core';
+import { ENTITY_POST, ENTITY_ROOT } from '../constants/qdn';
 
 export interface UserSearchResult {
   name: string;
@@ -14,6 +16,7 @@ export function useSearchUsers() {
   const [error, setError] = useState<Error | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = useRef(0);
+  const { identifierOperations } = useGlobal();
 
   // Cleanup debounce timer on unmount
   useEffect(() => {
@@ -41,6 +44,13 @@ export function useSearchUsers() {
     const requestId = ++requestIdRef.current;
 
     try {
+      const postPrefix = identifierOperations?.buildSearchPrefix
+        ? await identifierOperations.buildSearchPrefix(
+            ENTITY_POST,
+            ENTITY_ROOT
+          )
+        : null;
+
       const response = await qortalRequest({
         action: 'SEARCH_NAMES',
         query: query,
@@ -58,28 +68,33 @@ export function useSearchUsers() {
         });
       }
 
-      // Fetch post counts in parallel
-      const usersWithCounts = await Promise.all(
-        users.map(async (user) => {
-          try {
-            const countRes = await qortalRequest({
-              action: 'SEARCH_QDN_RESOURCES',
-              service: 'DOCUMENT',
-              name: user.name,
-              identifier: '',
-              limit: 0,
-              prefix: false,
-              reverse: false,
-            });
+      let usersWithCounts = users;
 
-            const postCount = Array.isArray(countRes) ? countRes.length : undefined;
-            return { ...user, postCount };
-          } catch (err) {
-            console.error('Error fetching post count for user', user.name, err);
-            return user;
-          }
-        })
-      );
+      if (postPrefix) {
+        usersWithCounts = await Promise.all(
+          users.map(async (user) => {
+            try {
+              const countRes = await qortalRequest({
+                action: 'SEARCH_QDN_RESOURCES',
+                service: 'DOCUMENT',
+                name: user.name,
+                identifier: postPrefix,
+                limit: 1000,
+                prefix: true,
+                reverse: false,
+              });
+
+              const postCount = Array.isArray(countRes)
+                ? countRes.length
+                : undefined;
+              return { ...user, postCount };
+            } catch (err) {
+              console.error('Error fetching post count for user', user.name, err);
+              return user;
+            }
+          })
+        );
+      }
 
       if (requestId === requestIdRef.current) {
         setResults(usersWithCounts);
