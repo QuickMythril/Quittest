@@ -745,11 +745,16 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   }, []);
 
   const handleForwardConfirm = useCallback(
-    (selection: ForwardSelection) => {
+    async (selection: ForwardSelection) => {
       if (!forwardTarget) {
         showError('No post selected to forward.');
         return;
       }
+
+      const authed = await ensureAuthenticatedWithName();
+      if (!authed) return;
+
+      let loadId: string | undefined;
 
       try {
         const payload = buildForwardPayload({
@@ -758,15 +763,57 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           text: forwardTarget.text,
         });
 
-        setPreparedForward({ selection, payload });
-        showSuccess('Forward message prepared. Sending will be added next.');
+        const resolveAddress = async () => {
+          if (selection.user?.address) return selection.user.address;
+          if (!selection.user?.name) return null;
+          try {
+            const res = await qortalRequest({
+              action: 'GET_NAME_DATA',
+              name: selection.user.name,
+            });
+            const owner = res?.owner || res?.registrant || res?.nameData?.owner;
+            return owner || null;
+          } catch (err) {
+            console.error('Error resolving name to address', err);
+            return null;
+          }
+        };
+
+        const requestParams =
+          selection.target === 'group'
+            ? ({
+                action: 'SEND_CHAT_MESSAGE',
+                groupId: selection.groupId,
+                message: payload.message,
+              } as const)
+            : ({
+                action: 'SEND_CHAT_MESSAGE',
+                recipient: await resolveAddress(),
+                message: payload.message,
+              } as const);
+
+        if (selection.target === 'user' && !requestParams.recipient) {
+          throw new Error('Could not resolve recipient address.');
+        }
+
+        loadId = showLoading('Sending message...');
+        await qortalRequest(requestParams as any);
+
+        showSuccess('Forwarded to chat.');
         handleCloseForward();
       } catch (err) {
         console.error('Error building forward payload', err);
-        showError('Could not prepare forward message.');
+        showError(
+          err instanceof Error
+            ? err.message
+            : 'Could not send forward message.'
+        );
+      } finally {
+        if (loadId) dismissToast(loadId);
+        setPreparedForward(null);
       }
     },
-    [forwardTarget, handleCloseForward]
+    [forwardTarget, ensureAuthenticatedWithName, handleCloseForward]
   );
 
   const handleEdit = useCallback((postId: string, post: PostData) => {
