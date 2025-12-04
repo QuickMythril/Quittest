@@ -121,6 +121,7 @@ export function NameSwitcher() {
   const [names, setNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const menuOpen = Boolean(anchorEl);
 
   // Fetch names when component mounts or address changes
@@ -194,7 +195,61 @@ export function NameSwitcher() {
   };
 
   if (!auth?.name || !auth?.address) {
-    return null;
+    const handleAuthenticate = async () => {
+      if (isAuthenticating) return;
+      setIsAuthenticating(true);
+      try {
+        await auth?.authenticateUser?.();
+      } catch (error) {
+        console.error('Authentication failed:', error);
+        showError('Authentication was cancelled or failed.');
+      } finally {
+        setIsAuthenticating(false);
+      }
+    };
+
+    return (
+      <NameSwitcherContainer>
+        <NameSwitcherButton
+          onClick={handleAuthenticate}
+          disabled={isAuthenticating}
+          aria-label="Authenticate"
+        >
+          <NameInfo>
+            <NameAvatar>
+              <PersonIcon sx={{ fontSize: '20px' }} />
+            </NameAvatar>
+            <NameDetails>
+              <Typography
+                variant="body1"
+                fontWeight={700}
+                sx={{
+                  fontSize: '15px',
+                  color: 'text.primary',
+                  textAlign: 'left',
+                }}
+              >
+                Authenticate
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '13px',
+                  color: 'text.secondary',
+                }}
+              >
+                Connect to select a name
+              </Typography>
+            </NameDetails>
+          </NameInfo>
+          {isAuthenticating ? (
+            <CircularProgress size={20} />
+          ) : (
+            <ArrowIcon />
+          )}
+        </NameSwitcherButton>
+      </NameSwitcherContainer>
+    );
   }
 
   const currentName = auth.name;

@@ -884,8 +884,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           <Sidebar
             onNavigate={handleNavigate}
             onTweet={handleTweet}
-            isAuthenticated={isAuthenticated}
             onProfileNavigate={handleProfileNavigate}
+            profileLabel="Profile"
             activePage={
               isOwnProfile
                 ? 'profile'
