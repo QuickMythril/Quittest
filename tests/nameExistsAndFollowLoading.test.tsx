@@ -23,14 +23,13 @@ vi.mock('src/hooks/useIsFollowing', () => ({
   useIsFollowing: () => isFollowingMockReturn,
 }));
 
+import { useNameExists } from 'src/hooks/useNameExists';
+import { useIsFollowing } from 'src/hooks/useIsFollowing';
+
 // Minimal component that exercises the hooks and renders simple markers
 const TestProfile = ({ userName }: { userName: string }) => {
-  const { nameExists, isChecking, error } = require('src/hooks/useNameExists').useNameExists(
-    userName
-  );
-  const { isFollowing, isLoading } = require('src/hooks/useIsFollowing').useIsFollowing(
-    userName
-  );
+  const { nameExists, isChecking, error } = useNameExists(userName);
+  const { isFollowing, isLoading } = useIsFollowing(userName);
 
   if (isChecking) {
     return <div>Loading name...</div>;
@@ -99,4 +98,3 @@ describe('Name existence and follow loading states', () => {
     expect(btn).toBeDisabled();
   });
 });
-
