@@ -33,6 +33,7 @@ import { useFetchProfile } from '../hooks/useFetchProfile';
 import { CreateProfile } from './CreateProfile';
 import { copyToClipboard } from '../utils/clipboard';
 import { showError, showSuccess } from 'qapp-core';
+import { useNameExists } from '../hooks/useNameExists';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -106,6 +107,21 @@ const ActionColumn = styled('div')(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(1),
   minWidth: 140,
+}));
+
+const ErrorContainer = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: theme.spacing(6),
+  textAlign: 'center',
+  gap: theme.spacing(2),
+}));
+
+const ErrorIcon = styled('div')(({ theme }) => ({
+  fontSize: '64px',
+  marginBottom: theme.spacing(2),
 }));
 
 const TabsContainer = styled('div')(({ theme }) => ({
@@ -216,6 +232,13 @@ export function UserFeed({
   const [replyIdentifierPrefix, setReplyIdentifierPrefix] =
     useState<string>('');
   const { identifierOperations, auth } = useGlobal();
+
+  // Check if name exists on Qortal
+  const {
+    nameExists,
+    isChecking: isCheckingName,
+    error: nameError,
+  } = useNameExists(userName);
 
   // Follow hooks
   const { isFollowing, isLoading: isFollowLoading } = useIsFollowing(userName);
@@ -360,6 +383,63 @@ export function UserFeed({
       pinnedPostIds,
     ]
   );
+
+  // Show loading state while checking if name exists
+  if (isCheckingName) {
+    return (
+      <PageContainer>
+        <PageHeader>
+          <BackButton onClick={onBack} size="small">
+            <ArrowBackIcon />
+          </BackButton>
+          <div>
+            <Typography variant="h6" fontWeight={700}>
+              {userName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Loading...
+            </Typography>
+          </div>
+        </PageHeader>
+        <LoadingContainer>
+          <CircularProgress />
+        </LoadingContainer>
+      </PageContainer>
+    );
+  }
+
+  // Show error if name doesn't exist
+  if (!nameExists) {
+    return (
+      <PageContainer>
+        <PageHeader>
+          <BackButton onClick={onBack} size="small">
+            <ArrowBackIcon />
+          </BackButton>
+          <div>
+            <Typography variant="h6" fontWeight={700}>
+              {userName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Profile
+            </Typography>
+          </div>
+        </PageHeader>
+        <ErrorContainer>
+          <ErrorIcon>👤❌</ErrorIcon>
+          <Typography variant="h5" fontWeight={700} color="text.primary">
+            Name Not Found
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {nameError || `The name "@${userName}" is not registered on Qortal.`}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Please check the spelling and try again.
+          </Typography>
+        </ErrorContainer>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>

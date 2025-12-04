@@ -5,7 +5,7 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [x] Clipboard robustness: log and fallback path before legacy copy attempt.
 - [x] Hashtag description handling: length-safe hashtag normalization with truncation indicator in composer (`buildHashtagDescription` usage).
 - [x] Follow UX polish: follow button loading/disabled state tied to `useIsFollowing` returning `{ isFollowing, isLoading }`.
-- [ ] Name existence UX: cached name-existence check, loading/not-found states on profile, and related atoms/utils.
+- [x] Name existence UX: cached name-existence check, loading/not-found states on profile, and related atoms/utils.
 - [ ] Mention/reply metadata: hash and embed mentions/replies into publish/update descriptions for notification discovery.
 - [ ] Mentions: @-autocomplete/search in composer, styled mentions in contentEditable, clickable mentions in posts, and mention parsing in parent-post previews.
 - [ ] Notification sound: Web Audio chime utility and settings/test trigger.
@@ -36,18 +36,18 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [ ] src/utils/postQdn.ts
 
 ## Name existence UX
-- [ ] src/hooks/useNameExists.ts
-- [ ] src/state/global/nameValidation.ts
-- [ ] src/utils/nameValidation.ts
-- [ ] src/components/UserFeed.tsx
+- [x] src/hooks/useNameExists.ts
+- [x] src/state/global/nameValidation.ts
+- [x] src/utils/nameValidation.ts
+- [x] src/components/UserFeed.tsx
 
 ## Follow UX polish (loading state)
-- [ ] src/hooks/useIsFollowing.ts
-- [ ] src/components/UserFeed.tsx
+- [x] src/hooks/useIsFollowing.ts
+- [x] src/components/UserFeed.tsx
 
 ## Hashtag description handling (truncation indicator)
-- [ ] src/utils/postQdn.ts
-- [ ] src/components/NewPostInput.tsx
+- [x] src/utils/postQdn.ts
+- [x] src/components/NewPostInput.tsx
 
 ## Notification storage plumbing
 - [ ] src/utils/notificationStorageDB.ts
@@ -60,4 +60,4 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [ ] src/components/NotificationsPage.tsx
 
 ## Clipboard robustness
-- [ ] src/utils/clipboard.ts
+- [x] src/utils/clipboard.ts
