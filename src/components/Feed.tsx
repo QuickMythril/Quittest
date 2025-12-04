@@ -128,6 +128,7 @@ export function Feed({
   pinnedPostIds = new Set(),
   showAuthHint = false,
 }: FeedProps) {
+  const PAGE_SIZE = 10;
   const { identifierOperations } = useGlobal();
   const [searchPrefix, setSearchPrefix] = useState<string | null>(null);
   const [replySearchPrefix, setReplySearchPrefix] = useState<string | null>(
@@ -236,24 +237,24 @@ export function Feed({
   const search = useMemo((): QortalSearchParams => {
     return {
       service: 'DOCUMENT',
-      limit: 20,
+      limit: PAGE_SIZE,
       reverse: true,
       identifier: '',
     };
-  }, []);
+  }, [PAGE_SIZE]);
 
   const intervalSearch = useMemo((): QortalSearchParams | null => {
     if (!searchPrefix) return null;
     return {
       identifier: searchPrefix,
       service: 'DOCUMENT',
-      limit: 20,
+      limit: PAGE_SIZE,
       reverse: true,
       // names: followingNames,
       // exactMatchNames: true,
       prefix: true,
     };
-  }, [searchPrefix]);
+  }, [searchPrefix, PAGE_SIZE]);
 
   const secondaryDataSources = useMemo(() => {
     if (
@@ -429,7 +430,7 @@ export function Feed({
           listName={LIST_POSTS_FEED}
           direction="VERTICAL"
           disableVirtualization
-          disablePagination
+          limit={PAGE_SIZE}
           returnType="JSON"
           loaderList={loaderList}
           entityParams={{
