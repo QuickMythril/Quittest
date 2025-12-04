@@ -58,6 +58,7 @@ import {
   handleFollowUser,
   handleUnfollowUser,
 } from '../utils/followingHelpers';
+import { buildForwardPayload, ForwardPayload } from '../utils/forwardPayload';
 
 // Declare qortalRequest as a global function (provided by Qortal runtime)
 declare global {
@@ -274,7 +275,12 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const [forwardTarget, setForwardTarget] = useState<{
     id: string;
     name: string;
+    text?: string;
     target?: 'user' | 'group';
+  } | null>(null);
+  const [preparedForward, setPreparedForward] = useState<{
+    selection: ForwardSelection;
+    payload: ForwardPayload;
   } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -722,12 +728,12 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     }
   }, []);
 
-  const handleForward = useCallback((postId: string, postName: string) => {
+  const handleForward = useCallback((postId: string, postName: string, text?: string) => {
     if (!postId || !postName) {
       showError('Unable to forward: missing post details.');
       return;
     }
-    setForwardTarget({ id: postId, name: postName });
+    setForwardTarget({ id: postId, name: postName, text });
   }, []);
 
   const handleCloseForward = useCallback(() => {
@@ -740,13 +746,27 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
 
   const handleForwardConfirm = useCallback(
     (selection: ForwardSelection) => {
-      setForwardTarget((prev) =>
-        prev ? { ...prev, target: selection.target } : prev
-      );
-      // Sending will be wired in later steps; for now just close the modal.
-      handleCloseForward();
+      if (!forwardTarget) {
+        showError('No post selected to forward.');
+        return;
+      }
+
+      try {
+        const payload = buildForwardPayload({
+          postId: forwardTarget.id,
+          postName: forwardTarget.name,
+          text: forwardTarget.text,
+        });
+
+        setPreparedForward({ selection, payload });
+        showSuccess('Forward message prepared. Sending will be added next.');
+        handleCloseForward();
+      } catch (err) {
+        console.error('Error building forward payload', err);
+        showError('Could not prepare forward message.');
+      }
     },
-    [handleCloseForward]
+    [forwardTarget, handleCloseForward]
   );
 
   const handleEdit = useCallback((postId: string, post: PostData) => {
@@ -995,10 +1015,10 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
               onBack={handleBackToHome}
               onNewReply={handleNewReply}
               onLike={handleLike}
-              onRetweet={handleRetweet}
-              onReply={handleReply}
-              onShare={handleShare}
-              onForward={handleForward}
+            onRetweet={handleRetweet}
+            onReply={handleReply}
+            onShare={handleShare}
+            onForward={handleForward}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPin={handlePin}

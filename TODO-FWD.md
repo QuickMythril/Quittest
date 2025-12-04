@@ -42,7 +42,7 @@ Add a "Forward to chat" button on each post to share post content via chat to a 
    - Show autocomplete list; allow selecting a recipient; store address/name.
    - Disable send until a recipient is selected.
 
-4) **Group flow – group picker**
+4) **Group flow – group picker** ✅
    - Fetch joined groups (list joined group IDs/names) and display as selectable options.
    - Add simple filter by name/ID; allow selecting one group.
    - Disable send until a group is selected.
