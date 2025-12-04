@@ -6,7 +6,7 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [x] Hashtag description handling: length-safe hashtag normalization with truncation indicator in composer (`buildHashtagDescription` usage).
 - [x] Follow UX polish: follow button loading/disabled state tied to `useIsFollowing` returning `{ isFollowing, isLoading }`.
 - [x] Name existence UX: cached name-existence check, loading/not-found states on profile, and related atoms/utils.
-- [ ] Mention/reply metadata: hash and embed mentions/replies into publish/update descriptions for notification discovery.
+- [x] Mention/reply metadata: hash and embed mentions/replies into publish/update descriptions for notification discovery.
 - [ ] Mentions: @-autocomplete/search in composer, styled mentions in contentEditable, clickable mentions in posts, and mention parsing in parent-post previews.
 - [ ] Notification sound: Web Audio chime utility and settings/test trigger.
 - [ ] Notification storage plumbing: IndexedDB/localforage store for shown IDs and preferences; initialization at layout bootstrap.
@@ -29,11 +29,11 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [ ] src/styles/Layout.tsx
 
 ## Mentions (composer + rendering)
-- [ ] src/components/NewPostInput.tsx
-- [ ] src/components/Post.tsx
+- [x] src/components/NewPostInput.tsx
+- [x] src/components/Post.tsx
 
 ## Mention/reply metadata embedding
-- [ ] src/utils/postQdn.ts
+- [x] src/utils/postQdn.ts
 
 ## Name existence UX
 - [x] src/hooks/useNameExists.ts
