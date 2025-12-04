@@ -11,22 +11,22 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [x] Notification sound: Web Audio chime utility and settings/test trigger.
 - [x] Notification storage plumbing: IndexedDB/localforage store for shown IDs and preferences; initialization at layout bootstrap.
 - [x] Notifications UI: `/notifications` route/page with tabs and settings; sidebar badge/nav; snackbar click-through.
-- [ ] Notifications: polling followers/mentions/replies, unread tracking, persisted preferences (snackbar/sound), last-viewed timestamp, and snackbar popup.
+- [x] Notifications: polling followers/mentions/replies, unread tracking, persisted preferences (snackbar/sound), last-viewed timestamp, and snackbar popup.
 
 ## Notifications (polling, unread, persisted prefs)
 - [x] src/hooks/useNotifications.ts
 - [x] src/state/global/notifications.ts
-- [ ] src/utils/notificationTimestamp.ts
-- [ ] src/utils/notificationStorageDB.ts
-- [ ] src/hooks/useNotificationStorage.ts
-- [ ] src/components/NotificationSnackbar.tsx
+- [x] src/utils/notificationTimestamp.ts
+- [x] src/utils/notificationStorageDB.ts
+- [x] src/hooks/useNotificationStorage.ts
+- [x] src/components/NotificationSnackbar.tsx
 
 ## Notifications UI (route, page, sidebar, snackbar click)
 - [x] src/components/NotificationsPage.tsx
 - [x] src/routes/Routes.tsx
 - [x] src/components/SocialApp.tsx
 - [x] src/components/Sidebar.tsx
-- [ ] src/styles/Layout.tsx
+- [x] src/styles/Layout.tsx
 
 ## Mentions (composer + rendering)
 - [x] src/components/NewPostInput.tsx

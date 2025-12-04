@@ -52,7 +52,7 @@ import {
 } from '../utils/postQdn';
 import { PostData } from './Post';
 import { useFollowsList } from '../hooks/useFollowsList';
-import { useSetAtom } from 'jotai';
+import { useAtom, useSetAtom } from 'jotai';
 import { followedUsersAtom } from '../state/global/follows';
 import { ConfirmDialog } from './ConfirmDialog';
 import {
@@ -63,14 +63,8 @@ import { buildForwardPayload, ForwardPayload } from '../utils/forwardPayload';
 import { NotificationSnackbar } from './NotificationSnackbar';
 import { NotificationsPage } from './NotificationsPage';
 import { useNotifications } from '../hooks/useNotifications';
-import { useAtom } from 'jotai';
 import { hasUnreadNotificationsAtom } from '../state/global/notifications';
 import { setLastViewedNotificationsTimestamp } from '../utils/notificationTimestamp';
-import { NotificationSnackbar } from './NotificationSnackbar';
-import { NotificationsPage } from './NotificationsPage';
-import { useNotifications } from '../hooks/useNotifications';
-import { useAtom } from 'jotai';
-import { hasUnreadNotificationsAtom } from '../state/global/notifications';
 
 // Declare qortalRequest as a global function (provided by Qortal runtime)
 declare global {
@@ -312,7 +306,6 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const [hasUnreadNotifications, setHasUnreadNotifications] = useAtom(
     hasUnreadNotificationsAtom
   );
-  const [, setLastViewed] = useState(0);
 
   // Track navigation history to determine if we came from another post
   const previousPathRef = useRef<string>('');
@@ -432,10 +425,14 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
       } else if (page === 'search') {
         navigate('/search/users');
       } else if (page === 'notifications') {
+        if (auth?.name) {
+          setLastViewedNotificationsTimestamp(auth.name);
+          setHasUnreadNotifications(false);
+        }
         navigate('/notifications');
       }
     },
-    [handleProfileNavigate, navigate]
+    [handleProfileNavigate, navigate, auth?.name, setHasUnreadNotifications]
   );
 
   const handleBackToHome = useCallback(() => {
@@ -1274,6 +1271,16 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         onClose={handleCloseForward}
         onSelectPath={handleForwardPathSelect}
         onConfirm={handleForwardConfirm}
+      />
+
+      <NotificationSnackbar
+        onNotificationClick={() => {
+          if (auth?.name) {
+            setLastViewedNotificationsTimestamp(auth.name);
+            setHasUnreadNotifications(false);
+          }
+          navigate('/notifications');
+        }}
       />
 
       {/* Scroll to top button */}
