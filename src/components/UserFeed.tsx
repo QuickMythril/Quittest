@@ -283,11 +283,9 @@ export function UserFeed({
           emptyIcon="📭"
           emptyTitle={`No ${activeTab === 'replies' ? 'replies' : 'posts'} yet`}
           emptyMessage={
-            status === 'ERROR'
-              ? 'Unable to load content right now.'
-              : activeTab === 'replies'
-                ? `${userName} hasn't replied to any posts yet.`
-                : `${userName} hasn't posted anything yet.`
+            activeTab === 'replies'
+              ? `${userName} hasn't replied to any posts yet.`
+              : `${userName} hasn't posted anything yet.`
           }
         />
       );

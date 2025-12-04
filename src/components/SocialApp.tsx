@@ -319,11 +319,13 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const isPostPage = !!params.postId && !!params.name;
   const isUserPage = !!params.userName && !params.postId;
   const isSearchPage = location.pathname.startsWith('/search');
-  const isOwnProfile = isUserPage && params.userName === auth?.name;
-  const isAuthenticated = !!auth?.address;
+  const authedName = auth?.name ?? '';
+  const authedAddress = auth?.address ?? '';
+  const isOwnProfile = isUserPage && params.userName === authedName;
+  const isAuthenticated = !!authedAddress;
 
   const ensureAuthenticatedWithName = useCallback(async () => {
-    if (auth?.address && auth?.name) {
+    if (authedAddress && authedName) {
       return true;
     }
 
@@ -333,9 +335,11 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
 
     setIsAuthenticatingAction(true);
     try {
-      const result = await auth?.authenticateUser?.();
-      const address = result?.address ?? auth?.address;
-      const name = result?.name ?? auth?.name;
+      const result = (await auth?.authenticateUser?.()) as
+        | { address?: string; name?: string }
+        | undefined;
+      const address = result?.address ?? authedAddress;
+      const name = result?.name ?? authedName;
 
       if (!address || !name) {
         showError('A Qortal name is required to perform this action.');
@@ -349,17 +353,17 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     } finally {
       setIsAuthenticatingAction(false);
     }
-  }, [auth, isAuthenticatingAction]);
+  }, [authedAddress, authedName, auth, isAuthenticatingAction]);
 
   const handleProfileNavigate = useCallback(async () => {
     const authed = await ensureAuthenticatedWithName();
     if (!authed) return;
-    if (auth?.name) {
-      navigate(`/user/${auth.name}`);
+    if (authedName) {
+      navigate(`/user/${authedName}`);
     } else {
       showError('A Qortal name is required to view your profile.');
     }
-  }, [auth?.name, ensureAuthenticatedWithName, navigate]);
+  }, [authedName, ensureAuthenticatedWithName, navigate]);
 
   const handleNavigate = useCallback(
     (page: string) => {
@@ -431,7 +435,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           media: content.media,
           identifierOperations,
           addNewResources: lists.addNewResources,
-          userName: auth.name,
+          userName: authedName,
           replyToPostIdentifier: replyingToPost.id,
           replyToPostName: replyingToPost.name,
           publishMultipleResources,
@@ -451,7 +455,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         loadId = showLoading('Updating your post...');
 
         await updatePost(
-          auth.name,
+          authedName,
           editingPost.id,
           content.text,
           identifierOperations,
@@ -479,7 +483,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           media: content.media,
           identifierOperations,
           addNewResources: lists.addNewResources,
-          userName: auth.name,
+          userName: authedName,
           publishMultipleResources,
           updateNewResources: lists.updateNewResources,
         });
@@ -518,7 +522,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           await unlikePost(
             postId,
             identifierOperations,
-            auth.name,
+            authedName,
             lists.deleteResource
           );
           showSuccess('Post unliked');
@@ -528,7 +532,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           await likePost(
             postId,
             identifierOperations,
-            auth.name,
+            authedName,
             lists.addNewResources
           );
           showSuccess('Post liked');
@@ -560,7 +564,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
       }
 
       // Check if user is trying to repost their own content
-      if (auth?.name === post.qortalMetadata.name) {
+      if (authedName === post.qortalMetadata.name) {
         showError('You cannot repost your own content');
         return;
       }
@@ -587,7 +591,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
             await publishRepost({
               identifierOperations,
               addNewResources: lists.addNewResources,
-              userName: auth.name,
+              userName: authedName,
               originalPost: post,
             });
 
@@ -644,7 +648,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         media: content.media,
         identifierOperations,
         addNewResources: lists.addNewResources,
-        userName: auth.name,
+        userName: authedName,
         replyToPostIdentifier: postId,
         replyToPostName: postName,
         publishMultipleResources,
@@ -816,11 +820,11 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         await followUser(
           targetUserName,
           identifierOperations,
-          auth.name,
+          authedName,
           lists.addNewResources
         );
         // 2. Update IndexedDB immediately for instant UI feedback
-        await handleFollowUser(auth.name, targetUserName, identifierOperations);
+        await handleFollowUser(authedName, targetUserName, identifierOperations);
         showSuccess(`You are now following @${targetUserName}`);
         // Refetch the follows list to update the UI
         await refetchFollows();
@@ -853,11 +857,11 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         await unfollowUser(
           targetUserName,
           identifierOperations,
-          auth.name,
+          authedName,
           lists.deleteResource
         );
         // 2. Update IndexedDB immediately for instant UI feedback
-        await handleUnfollowUser(auth.name, targetUserName);
+        await handleUnfollowUser(authedName, targetUserName);
         showSuccess(`You unfollowed @${targetUserName}`);
         // Refetch the follows list to update the UI
         await refetchFollows();

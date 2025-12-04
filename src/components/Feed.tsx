@@ -194,11 +194,7 @@ export function Feed({
         status={status}
         emptyIcon="📭"
         emptyTitle="No posts yet"
-        emptyMessage={
-          status === 'ERROR'
-            ? 'Unable to load the feed right now.'
-            : 'Check back later for new content.'
-        }
+        emptyMessage="Check back later for new content."
       />
     );
   }, []);
@@ -430,6 +426,8 @@ export function Feed({
           listName={LIST_POSTS_FEED}
           direction="VERTICAL"
           disableVirtualization
+          // qapp-core supports limit for non-virtualized pagination; typing omits it
+          // @ts-expect-error limit is supported at runtime
           limit={PAGE_SIZE}
           returnType="JSON"
           loaderList={loaderList}

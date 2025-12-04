@@ -1,8 +1,6 @@
 import { styled } from '@mui/system';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Typography } from '@mui/material';
-import TagIcon from '@mui/icons-material/Tag';
 import { PostData } from '../Post';
 import { PostWrapper } from '../PostWrapper';
 import { ResourceListDisplay, LoaderListStatus, QortalMetadata } from 'qapp-core';
@@ -17,16 +15,6 @@ const ResultsContainer = styled('div')(({ theme }) => ({
   flexDirection: 'column',
   gap: theme.spacing(2),
   overflowAnchor: 'auto', // CSS scroll anchoring to prevent jumps during content loading
-}));
-
-const EmptyState = styled('div')(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: theme.spacing(6),
-  gap: theme.spacing(2),
-  color: theme.palette.text.secondary,
 }));
 
 interface HashtagSearchResultsProps {
@@ -99,11 +87,7 @@ export function HashtagSearchResults({
         status={status}
         emptyIcon="🔍"
         emptyTitle="No posts found"
-        emptyMessage={
-          status === 'ERROR'
-            ? 'Unable to load hashtag results right now.'
-            : 'No posts found with this hashtag'
-        }
+        emptyMessage="No posts found with this hashtag"
       />
     );
   }, []);

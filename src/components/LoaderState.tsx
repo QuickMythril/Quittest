@@ -4,7 +4,7 @@ import { LoaderListStatus } from 'qapp-core';
 import { memo } from 'react';
 
 interface LoaderStateProps {
-  status: LoaderListStatus;
+  status: LoaderListStatus | 'ERROR';
   emptyIcon?: string;
   emptyTitle?: string;
   emptyMessage?: string;
