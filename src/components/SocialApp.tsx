@@ -197,9 +197,6 @@ const LeftSection = styled('div')(({ theme }) => ({
 const CenterSection = styled('div')(({ theme }) => ({
   flex: 1,
   minWidth: 0,
-  [theme.breakpoints.down('sm')]: {
-    paddingTop: theme.spacing(8),
-  },
 }));
 
 const ScrollToTopButton = styled(Fab)(({ theme }) => ({
@@ -227,7 +224,7 @@ const TopNavBar = styled('div')(({ theme }) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: theme.spacing(1, 2),
+    padding: theme.spacing(0, 2),
     borderBottom: `1px solid ${theme.palette.divider}`,
     backgroundColor:
       theme.palette.mode === 'dark'
