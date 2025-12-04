@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 
 export interface UserSearchResult {
   name: string;
-  // Add more fields as needed
+  postCount?: number;
 }
 
 /**
@@ -13,6 +13,7 @@ export function useSearchUsers() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
 
   // Cleanup debounce timer on unmount
   useEffect(() => {
@@ -37,6 +38,7 @@ export function useSearchUsers() {
 
     setIsLoading(true);
     setError(null);
+    const requestId = ++requestIdRef.current;
 
     try {
       const response = await qortalRequest({
@@ -45,7 +47,7 @@ export function useSearchUsers() {
         limit: 20,
       });
 
-      const users: UserSearchResult[] = [];
+      let users: UserSearchResult[] = [];
 
       if (response && Array.isArray(response)) {
         response.forEach((nameData: any) => {
@@ -56,7 +58,32 @@ export function useSearchUsers() {
         });
       }
 
-      setResults(users);
+      // Fetch post counts in parallel
+      const usersWithCounts = await Promise.all(
+        users.map(async (user) => {
+          try {
+            const countRes = await qortalRequest({
+              action: 'SEARCH_QDN_RESOURCES',
+              service: 'DOCUMENT',
+              name: user.name,
+              identifier: '',
+              limit: 0,
+              prefix: false,
+              reverse: false,
+            });
+
+            const postCount = Array.isArray(countRes) ? countRes.length : undefined;
+            return { ...user, postCount };
+          } catch (err) {
+            console.error('Error fetching post count for user', user.name, err);
+            return user;
+          }
+        })
+      );
+
+      if (requestId === requestIdRef.current) {
+        setResults(usersWithCounts);
+      }
     } catch (err) {
       console.error('Error searching users:', err);
       setError(
@@ -64,7 +91,9 @@ export function useSearchUsers() {
       );
       setResults([]);
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 

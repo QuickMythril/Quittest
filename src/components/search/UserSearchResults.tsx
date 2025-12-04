@@ -141,6 +141,7 @@ export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
           <UserResultCard
             key={user.name}
             userName={user.name}
+            postCount={user.postCount}
             currentUserName={auth?.name || undefined}
             onClick={() => handleUserItemClick(user.name)}
           />
@@ -179,6 +180,7 @@ export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
         <UserResultCard
           key={user.name}
           userName={user.name}
+          postCount={user.postCount}
           currentUserName={auth?.name || undefined}
           onClick={() => handleUserItemClick(user.name)}
         />
@@ -189,12 +191,14 @@ export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
 
 interface UserResultCardProps {
   userName: string;
+  postCount?: number;
   currentUserName?: string;
   onClick: () => void;
 }
 
 function UserResultCard({
   userName,
+  postCount,
   currentUserName,
   onClick,
 }: UserResultCardProps) {
@@ -220,6 +224,11 @@ function UserResultCard({
           <Typography variant="body2" color="text.secondary">
             @{userName}
           </Typography>
+          {postCount !== undefined && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+              {postCount} {postCount === 1 ? 'post' : 'posts'}
+            </Typography>
+          )}
           {profile?.bio && (
             <Typography
               variant="body2"

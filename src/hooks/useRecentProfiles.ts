@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useGlobal } from 'qapp-core';
 import { UserSearchResult } from './useSearchUsers';
 
@@ -11,12 +11,14 @@ export function useRecentProfiles(limit = 20) {
   const [results, setResults] = useState<UserSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const requestIdRef = useRef(0);
 
   const fetchRecentProfiles = useCallback(async () => {
     if (!identifierOperations?.createSingleIdentifier) return;
 
     setIsLoading(true);
     setError(null);
+    const requestId = ++requestIdRef.current;
 
     try {
       const profileId =
@@ -49,13 +51,38 @@ export function useRecentProfiles(limit = 20) {
         }
       }
 
-      setResults(names);
+      // Fetch post counts for these users
+      const withCounts = await Promise.all(
+        names.map(async (user) => {
+          try {
+            const res = await fetch(
+              `/arbitrary/resources/search?service=DOCUMENT&identifier=&name=${encodeURIComponent(user.name)}&prefix=false&limit=0&reverse=false&mode=ALL`
+            );
+            if (res?.ok) {
+              const resources = await res.json();
+              const postCount = Array.isArray(resources)
+                ? resources.length
+                : undefined;
+              return { ...user, postCount };
+            }
+          } catch (err) {
+            console.error('Failed to fetch post count for', user.name, err);
+          }
+          return user;
+        })
+      );
+
+      if (requestId === requestIdRef.current) {
+        setResults(withCounts);
+      }
     } catch (err) {
       console.error('Error fetching recent profiles:', err);
       setError(err instanceof Error ? err : new Error('Failed to load profiles'));
       setResults([]);
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [identifierOperations?.createSingleIdentifier, limit]);
 
