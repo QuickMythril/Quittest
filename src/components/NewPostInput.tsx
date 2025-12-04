@@ -4,6 +4,7 @@ import {
   Box,
   useTheme,
   CircularProgress,
+  Typography,
 } from '@mui/material';
 import { styled } from '@mui/system';
 import ImageIcon from '@mui/icons-material/Image';
