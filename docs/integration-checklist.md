@@ -2,7 +2,7 @@
 
 Use this list to track re-adding v0.0.2 functionality into main. Check items off as they’re implemented and verified. Ordered from simplest to most complex.
 
-- [ ] Clipboard robustness: log and fallback path before legacy copy attempt.
+- [x] Clipboard robustness: log and fallback path before legacy copy attempt.
 - [ ] Hashtag description handling: length-safe hashtag normalization with truncation indicator in composer (`buildHashtagDescription` usage).
 - [ ] Follow UX polish: follow button loading/disabled state tied to `useIsFollowing` returning `{ isFollowing, isLoading }`.
 - [ ] Name existence UX: cached name-existence check, loading/not-found states on profile, and related atoms/utils.
