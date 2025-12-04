@@ -39,9 +39,12 @@ export function useTrendingHashtags(limit = 10) {
         string,
         { count: number; lastSeenIndex?: number }
       >();
-      response.forEach((resource: any, index: number) => {
+      for (let index = 0; index < response.length; index++) {
+        const resource = response[index];
         const desc = resource?.metadata?.description;
-        if (!desc || typeof desc !== 'string') continue;
+        if (!desc || typeof desc !== 'string') {
+          continue;
+        }
         const regex = /~#(\w+)~/g;
         let match;
         while ((match = regex.exec(desc)) !== null) {
@@ -55,7 +58,7 @@ export function useTrendingHashtags(limit = 10) {
                 : index, // lower index => more recent in reversed results
           });
         }
-      });
+      }
 
       const sorted = Array.from(topicCounts.entries())
         .map(([tag, data]) => ({
