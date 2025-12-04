@@ -47,9 +47,9 @@ export function buildForwardPayload({
   postId,
   postName,
   text,
-    author,
-    created,
-  }: BuildPayloadArgs): ForwardPayload {
+  author,
+  created,
+}: BuildPayloadArgs): ForwardPayload {
   const link = `qortal://APP/Quittest/post/${encodeURIComponent(postName)}/${encodeURIComponent(postId)}`;
   const authorFromLink = decodeURIComponent(link.split('/')[5] || postName || 'Unknown');
   const cleanText = (text || '').replace(/\s+/g, ' ').trim();
@@ -80,15 +80,33 @@ export function buildForwardPayload({
     ...(ago ? [{ type: 'text', text: ` – ${ago}` }] : []),
   ];
 
-  const blockquoteContent =
-    text && text.length
-      ? text.split('\n').map((line) => ({
+  const buildQuoteNode = (value: string) => {
+    const parts = value.split('\n');
+    const content: any[] = [];
+    parts.forEach((line, idx) => {
+      if (line.length) {
+        content.push({ type: 'text', text: line });
+      }
+      if (idx < parts.length - 1) {
+        content.push({ type: 'hardBreak' });
+      }
+      if (!line.length && idx === parts.length - 1) {
+        content.push({ type: 'text', text: ' ' });
+      }
+    });
+    return {
+      type: 'blockquote',
+      content: [
+        {
           type: 'paragraph',
-          content: line
-            ? [{ type: 'text', text: line }]
-            : [{ type: 'text', text: '' }],
-        }))
-      : [];
+          content,
+        },
+      ],
+    };
+  };
+
+  const blockquoteNode =
+    text && text.length ? buildQuoteNode(text) : null;
 
   const doc = {
     type: 'doc',
@@ -99,12 +117,7 @@ export function buildForwardPayload({
             content: headerParts,
           }
         : undefined,
-      blockquoteContent.length
-        ? {
-            type: 'blockquote',
-            content: blockquoteContent,
-          }
-        : undefined,
+      blockquoteNode || undefined,
       {
         type: 'paragraph',
         content: [
@@ -131,25 +144,17 @@ export function buildForwardPayload({
   let bytes = encoder.encode(JSON.stringify(fullMessageObject)).length;
 
   // If too big, truncate text content inside the blockquote paragraphs
-  if (bytes > MAX_MESSAGE_BYTES && blockquoteContent.length) {
+  if (bytes > MAX_MESSAGE_BYTES && blockquoteNode) {
     const available = MAX_MESSAGE_BYTES - (bytes - encoder.encode(text || '').length) - 50; // leave buffer
     const truncated = truncateToBytes(text || '', Math.max(available, 0));
-    const truncatedContent = truncated
-      ? truncated.split('\n').map((line) => ({
-          type: 'paragraph',
-          content: line
-            ? [{ type: 'text', text: line }]
-            : [{ type: 'text', text: '' }],
-        }))
-      : [];
+    const truncatedNode =
+      truncated && truncated.length ? buildQuoteNode(truncated) : null;
 
     const newDoc = {
       ...doc,
       content: (doc.content || []).map((node: any) =>
         node?.type === 'blockquote'
-          ? truncatedContent.length
-            ? { ...node, content: truncatedContent }
-            : null
+          ? truncatedNode
           : node
       ).filter(Boolean),
     };
