@@ -97,6 +97,14 @@ export function Routes() {
               </Suspense>
             ),
           },
+          {
+            path: 'notifications',
+            element: (
+              <Suspense fallback={<LoadingFallback />}>
+                <App />
+              </Suspense>
+            ),
+          },
         ],
       },
     ],

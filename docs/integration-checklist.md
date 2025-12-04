@@ -15,15 +15,15 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 
 ## Notifications (polling, unread, persisted prefs)
 - [ ] src/hooks/useNotifications.ts
-- [ ] src/state/global/notifications.ts
+- [x] src/state/global/notifications.ts
 - [ ] src/utils/notificationTimestamp.ts
 - [ ] src/utils/notificationStorageDB.ts
 - [ ] src/hooks/useNotificationStorage.ts
 - [ ] src/components/NotificationSnackbar.tsx
 
 ## Notifications UI (route, page, sidebar, snackbar click)
-- [ ] src/components/NotificationsPage.tsx
-- [ ] src/routes/Routes.tsx
+- [x] src/components/NotificationsPage.tsx
+- [x] src/routes/Routes.tsx
 - [ ] src/components/SocialApp.tsx
 - [ ] src/components/Sidebar.tsx
 - [ ] src/styles/Layout.tsx
