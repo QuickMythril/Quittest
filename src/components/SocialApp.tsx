@@ -277,6 +277,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     name: string;
     text?: string;
     target?: 'user' | 'group';
+    created?: number;
   } | null>(null);
   const [preparedForward, setPreparedForward] = useState<{
     selection: ForwardSelection;
@@ -761,6 +762,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           postId: forwardTarget.id,
           postName: forwardTarget.name,
           text: forwardTarget.text,
+          created: forwardTarget.created,
         });
 
         const resolveAddress = async () => {
