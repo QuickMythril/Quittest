@@ -8,8 +8,13 @@ import {
   Suspense,
 } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { CircularProgress, Box, Fab, Zoom } from '@mui/material';
+import { CircularProgress, Box, Fab, Zoom, IconButton } from '@mui/material';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import HomeIcon from '@mui/icons-material/Home';
+import SearchIcon from '@mui/icons-material/Search';
+import PersonIcon from '@mui/icons-material/Person';
+import AddIcon from '@mui/icons-material/Add';
+import { NameSwitcher } from './NameSwitcher';
 import { Feed } from './Feed';
 import { PostPage } from './PostPage';
 import { UserFeed } from './UserFeed';
@@ -134,6 +139,9 @@ const AppContainer = styled('div')(({ theme }) => ({
       : 'linear-gradient(135deg, #f7f9fc 0%, #e9f2f9 100%)',
   color: theme.palette.text.primary,
   position: 'relative',
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+  },
   '&::before': {
     content: '""',
     position: 'fixed',
@@ -169,6 +177,9 @@ const MainContent = styled('div')(({ theme }) => ({
     theme.palette.mode === 'dark'
       ? '0 0 40px rgba(0, 0, 0, 0.3)'
       : '0 0 40px rgba(0, 0, 0, 0.06)',
+  [theme.breakpoints.down('sm')]: {
+    flexDirection: 'column',
+  },
 }));
 
 const LeftSection = styled('div')(({ theme }) => ({
@@ -178,12 +189,18 @@ const LeftSection = styled('div')(({ theme }) => ({
       ? 'rgba(21, 32, 43, 0.6)'
       : 'rgba(255, 255, 255, 0.6)',
   backdropFilter: 'blur(10px)',
+  [theme.breakpoints.down('sm')]: {
+    display: 'none',
+  },
 }));
 
-const CenterSection = styled('div')({
+const CenterSection = styled('div')(({ theme }) => ({
   flex: 1,
   minWidth: 0,
-});
+  [theme.breakpoints.down('sm')]: {
+    paddingTop: theme.spacing(8),
+  },
+}));
 
 const ScrollToTopButton = styled(Fab)(({ theme }) => ({
   position: 'fixed',
@@ -202,6 +219,32 @@ const ScrollToTopButton = styled(Fab)(({ theme }) => ({
   '&:active': {
     transform: 'translateY(-2px)',
   },
+}));
+
+const TopNavBar = styled('div')(({ theme }) => ({
+  display: 'none',
+  [theme.breakpoints.down('sm')]: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: theme.spacing(1, 2),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    backgroundColor:
+      theme.palette.mode === 'dark'
+        ? 'rgba(21, 32, 43, 0.9)'
+        : 'rgba(255, 255, 255, 0.9)',
+    backdropFilter: 'blur(10px)',
+    position: 'sticky',
+    top: 0,
+    zIndex: 15,
+    gap: theme.spacing(1),
+  },
+}));
+
+const TopNavGroup = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
 }));
 
 interface SocialAppProps {
@@ -868,6 +911,33 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
 
   return (
     <AppContainer>
+      <TopNavBar>
+        <TopNavGroup>
+          <IconButton color="primary" onClick={() => handleNavigate('home')}>
+            <HomeIcon />
+          </IconButton>
+          <IconButton
+            color="primary"
+            onClick={() => handleNavigate('search')}
+          >
+            <SearchIcon />
+          </IconButton>
+          <IconButton
+            color="primary"
+            onClick={() => {
+              handleProfileNavigate();
+            }}
+          >
+            <PersonIcon />
+          </IconButton>
+        </TopNavGroup>
+        <TopNavGroup>
+          <IconButton color="primary" onClick={handleTweet}>
+            <AddIcon />
+          </IconButton>
+          <NameSwitcher />
+        </TopNavGroup>
+      </TopNavBar>
       <MainContent>
         <LeftSection>
           <Sidebar
