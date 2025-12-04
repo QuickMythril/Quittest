@@ -4,7 +4,7 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 
 - [x] Clipboard robustness: log and fallback path before legacy copy attempt.
 - [x] Hashtag description handling: length-safe hashtag normalization with truncation indicator in composer (`buildHashtagDescription` usage).
-- [ ] Follow UX polish: follow button loading/disabled state tied to `useIsFollowing` returning `{ isFollowing, isLoading }`.
+- [x] Follow UX polish: follow button loading/disabled state tied to `useIsFollowing` returning `{ isFollowing, isLoading }`.
 - [ ] Name existence UX: cached name-existence check, loading/not-found states on profile, and related atoms/utils.
 - [ ] Mention/reply metadata: hash and embed mentions/replies into publish/update descriptions for notification discovery.
 - [ ] Mentions: @-autocomplete/search in composer, styled mentions in contentEditable, clickable mentions in posts, and mention parsing in parent-post previews.

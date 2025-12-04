@@ -1,5 +1,12 @@
 import { styled } from '@mui/system';
-import { Typography, IconButton, Avatar, Button, Box } from '@mui/material';
+import {
+  Typography,
+  IconButton,
+  Avatar,
+  Button,
+  Box,
+  CircularProgress,
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
@@ -211,7 +218,7 @@ export function UserFeed({
   const { identifierOperations, auth } = useGlobal();
 
   // Follow hooks
-  const isFollowing = useIsFollowing(userName);
+  const { isFollowing, isLoading: isFollowLoading } = useIsFollowing(userName);
   const followerCount = useFollowerCount(userName);
   const { followingCount } = useFollowingList(userName);
   
@@ -222,6 +229,7 @@ export function UserFeed({
   const isOwnProfile = auth?.name === userName;
 
   const handleFollowClick = () => {
+    if (isFollowLoading) return;
     if (isFollowing && onUnfollow) {
       onUnfollow(userName);
     } else if (!isFollowing && onFollow) {
@@ -407,10 +415,19 @@ export function UserFeed({
             <FollowButton
               variant={isFollowing ? 'outlined' : 'contained'}
               color="primary"
-              startIcon={isFollowing ? <PersonRemoveIcon /> : <PersonAddIcon />}
+              startIcon={
+                isFollowLoading ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : isFollowing ? (
+                  <PersonRemoveIcon />
+                ) : (
+                  <PersonAddIcon />
+                )
+              }
               onClick={handleFollowClick}
+              disabled={isFollowLoading}
             >
-              {isFollowing ? 'Unfollow' : 'Follow'}
+              {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
             </FollowButton>
           )}
           <Button
