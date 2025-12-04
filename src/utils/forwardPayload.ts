@@ -68,13 +68,16 @@ export function buildForwardPayload({
   }
 
   // Build tiptap document
-  const headerParts = [];
-  if (author) headerParts.push({ type: 'text', text: author, marks: [{ type: 'bold' }] });
   const ago = timeAgo(created);
-  if (ago) {
-    if (headerParts.length) headerParts.push({ type: 'text', text: ' – ' });
-    headerParts.push({ type: 'text', text: ago });
-  }
+  const headerParts = [
+    { type: 'text', text: 'Posted by ' },
+    {
+      type: 'text',
+      text: author || 'Unknown',
+      marks: [{ type: 'bold' }],
+    },
+    ...(ago ? [{ type: 'text', text: ` – ${ago}` }] : []),
+  ];
 
   const blockquoteContent =
     text && text.length
