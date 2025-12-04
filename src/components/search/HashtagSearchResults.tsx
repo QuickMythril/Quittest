@@ -5,7 +5,7 @@ import { Typography } from '@mui/material';
 import TagIcon from '@mui/icons-material/Tag';
 import { PostData } from '../Post';
 import { PostWrapper } from '../PostWrapper';
-import { ResourceListDisplay, LoaderListStatus } from 'qapp-core';
+import { ResourceListDisplay, LoaderListStatus, QortalMetadata } from 'qapp-core';
 import { LoaderState, LoaderItem } from '../LoaderState';
 import { ENTITY_POST, ENTITY_ROOT } from '../../constants/qdn';
 import { QortalSearchParams } from 'qapp-core';
@@ -62,11 +62,13 @@ export function HashtagSearchResults({
     isLoading: isLoadingTrending,
     error: trendingError,
   } = useTrendingHashtags();
+  const [hasSearchResults, setHasSearchResults] = useState<boolean | null>(null);
 
   // Initialize from URL params and trigger search immediately when query changes
   useEffect(() => {
     const query = searchParams.get('q') || '';
     setSearchQuery(query);
+    setHasSearchResults(null);
   }, [searchParams]);
 
   // Set up search parameters for hashtag ResourceListDisplay
@@ -152,6 +154,19 @@ export function HashtagSearchResults({
     ]
   );
 
+  const handleResults = useCallback((results: { resourceItems: QortalMetadata[] }) => {
+    setHasSearchResults(results?.resourceItems?.length > 0);
+  }, []);
+
+  const relatedTags =
+    searchQuery && trendingTags.length
+      ? trendingTags.filter(({ tag }) =>
+          tag.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      : [];
+
+  const showRelatedHashtags = hasSearchResults === false;
+
   if (!searchQuery) {
     return (
       <HashtagList
@@ -191,23 +206,18 @@ export function HashtagSearchResults({
         filterDuplicateIdentifiers={{
           enabled: true,
         }}
-        onEmpty={
-          trendingTags.length
-            ? () => (
-                <HashtagList
-                  title="Related hashtags"
-                  tags={trendingTags
-                    .filter(({ tag }) =>
-                      tag.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
-                    .map(({ tag, count }) => ({ tag, count }))}
-                  emptyMessage="No matching hashtags"
-                  onSelect={(tag) => setSearchParams({ q: tag })}
-                />
-              )
-            : undefined
-        }
+        onResults={handleResults}
       />
+      {showRelatedHashtags && (
+        <HashtagList
+          title="Related hashtags"
+          tags={relatedTags.map(({ tag, count }) => ({ tag, count }))}
+          isLoading={isLoadingTrending}
+          error={trendingError}
+          emptyMessage="No matching hashtags"
+          onSelect={(tag) => setSearchParams({ q: tag })}
+        />
+      )}
     </ResultsContainer>
   );
 }
