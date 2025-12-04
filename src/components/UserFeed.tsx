@@ -29,7 +29,6 @@ import { showError, showSuccess } from 'qapp-core';
 
 const PageContainer = styled('div')({
   width: '100%',
-  maxWidth: '600px',
   minHeight: '100vh',
   position: 'relative',
 });
