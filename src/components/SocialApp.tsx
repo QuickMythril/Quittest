@@ -14,7 +14,7 @@ import { Feed } from './Feed';
 import { PostPage } from './PostPage';
 import { UserFeed } from './UserFeed';
 import { SearchPage } from './SearchPage';
-import { Sidebar, RightSidebar } from './Sidebar';
+import { Sidebar } from './Sidebar';
 import { PostContent } from './NewPostInput';
 import {
   useGlobal,
@@ -187,18 +187,6 @@ const CenterSection = styled('div')({
   flex: 1,
   minWidth: 0,
 });
-
-const RightSection = styled('div')(({ theme }) => ({
-  borderLeft: `1px solid ${theme.palette.divider}`,
-  backgroundColor:
-    theme.palette.mode === 'dark'
-      ? 'rgba(21, 32, 43, 0.6)'
-      : 'rgba(255, 255, 255, 0.6)',
-  backdropFilter: 'blur(10px)',
-  [theme.breakpoints.down('lg')]: {
-    display: 'none',
-  },
-}));
 
 const ScrollToTopButton = styled(Fab)(({ theme }) => ({
   position: 'fixed',
@@ -978,9 +966,6 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           )}
         </CenterSection>
 
-        <RightSection>
-          <RightSidebar onTrendClick={handleTrendClick} />
-        </RightSection>
       </MainContent>
 
       {isPostModalOpen && (

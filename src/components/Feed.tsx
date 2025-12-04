@@ -27,6 +27,9 @@ import {
 import { LoaderState, LoaderItem } from './LoaderState';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { useFollowedNamesDB } from '../hooks/useFollowingListDB';
+import { useTrendingHashtags } from '../hooks/useTrendingHashtags';
+import TagIcon from '@mui/icons-material/Tag';
+import Chip from '@mui/material/Chip';
 
 const FeedContainer = styled('div')({
   width: '100%',
@@ -142,6 +145,12 @@ export function Feed({
   const [namesOfNewData, setNamesOfNewData] = useState<string[]>([]);
   const fetchFollowedNames = useFollowedNamesDB();
   const [followingNames, setFollowingNames] = useState<string[]>([]);
+  const {
+    tags: trendingTags,
+    isLoading: trendingLoading,
+    error: trendingError,
+    refetch: refetchTrending,
+  } = useTrendingHashtags(10);
   // Get up to 3 random followed users to display avatars
   // const displayAvatars = useMemo(() => {
   //   if (followedUsers.length === 0) return [];
@@ -416,6 +425,59 @@ export function Feed({
         isPublishing={isPublishing}
         showAuthHint={showAuthHint}
       />
+      <Box
+        sx={{
+          px: 2,
+          pb: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 1,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <TagIcon fontSize="small" color="primary" />
+          <Typography variant="subtitle1" fontWeight={700}>
+            Trending
+          </Typography>
+          {trendingLoading && <CircularProgress size={16} />}
+          {trendingError && (
+            <ButtonBase
+              sx={{ color: 'primary.main', fontSize: 12, ml: 'auto' }}
+              onClick={refetchTrending}
+            >
+              Retry
+            </ButtonBase>
+          )}
+        </Box>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 1,
+            flexWrap: 'wrap',
+          }}
+        >
+          {!trendingLoading && !trendingError && trendingTags.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              No trending hashtags yet.
+            </Typography>
+          )}
+          {trendingTags.map(({ tag, count }) => (
+            <Chip
+              key={tag}
+              label={
+                count ? `${tag} · ${count}` : tag
+              }
+              onClick={() => onHashtagClick?.(tag)}
+              variant="outlined"
+              size="small"
+              sx={{
+                cursor: 'pointer',
+                borderRadius: '16px',
+              }}
+            />
+          ))}
+        </Box>
+      </Box>
       <PostsContainer>
         {/* @ts-ignore - ref type issue with MemoExoticComponent */}
         <ResourceListDisplay
