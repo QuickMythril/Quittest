@@ -107,6 +107,7 @@ interface FeedProps {
   userName?: string;
   isPublishing?: boolean;
   pinnedPostIds?: Set<string>;
+  showAuthHint?: boolean;
 }
 
 export function Feed({
@@ -125,6 +126,7 @@ export function Feed({
   userName = 'User',
   isPublishing = false,
   pinnedPostIds = new Set(),
+  showAuthHint = false,
 }: FeedProps) {
   const { identifierOperations } = useGlobal();
   const [searchPrefix, setSearchPrefix] = useState<string | null>(null);
@@ -415,7 +417,7 @@ export function Feed({
         userAvatar={userAvatar}
         userName={userName}
         isPublishing={isPublishing}
-        showAuthHint
+        showAuthHint={showAuthHint}
       />
       <PostsContainer>
         {/* @ts-ignore - ref type issue with MemoExoticComponent */}

@@ -67,6 +67,7 @@ interface NewPostModalProps {
   isEditing?: boolean;
   isReplying?: boolean;
   replyToUsername?: string;
+  showAuthHint?: boolean;
 }
 
 export function NewPostModal({
@@ -81,6 +82,7 @@ export function NewPostModal({
   isEditing = false,
   isReplying = false,
   replyToUsername,
+  showAuthHint = false,
 }: NewPostModalProps) {
   const handlePost = async (content: PostContent) => {
     await onPost(content);
@@ -116,7 +118,7 @@ export function NewPostModal({
           initialMedia={initialMedia}
           isEditing={isEditing}
           placeholder={isReplying ? 'Post your reply...' : undefined}
-          showAuthHint
+          showAuthHint={showAuthHint}
         />
       </StyledDialogContent>
     </StyledDialog>

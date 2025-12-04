@@ -140,13 +140,28 @@ interface SidebarProps {
   onTrendClick?: (trend: string) => void;
   onFollow?: (userId: string) => void;
   activePage?: string;
+  isAuthenticated?: boolean;
+  onProfileNavigate?: () => void;
+  profileLabel?: string;
 }
 
 export function Sidebar({
   onNavigate = () => {},
   onTweet = () => {},
   activePage = 'home',
+  isAuthenticated = false,
+  onProfileNavigate,
+  profileLabel,
 }: SidebarProps) {
+  const resolvedProfileLabel = profileLabel || (isAuthenticated ? 'Profile' : 'Authenticate');
+  const handleProfileClick = () => {
+    if (onProfileNavigate) {
+      onProfileNavigate();
+      return;
+    }
+    onNavigate('profile');
+  };
+
   return (
     <SidebarContainer>
       <NavButton
@@ -180,10 +195,10 @@ export function Sidebar({
       </NavButton> */}
       <NavButton
         active={activePage === 'profile'}
-        onClick={() => onNavigate('profile')}
+        onClick={handleProfileClick}
       >
         <PersonIcon />
-        <NavLabel>Profile</NavLabel>
+        <NavLabel>{resolvedProfileLabel}</NavLabel>
       </NavButton>
       {/* <NavButton onClick={() => onNavigate('more')}>
         <MoreHorizIcon />

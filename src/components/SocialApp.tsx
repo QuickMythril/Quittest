@@ -320,6 +320,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const isUserPage = !!params.userName && !params.postId;
   const isSearchPage = location.pathname.startsWith('/search');
   const isOwnProfile = isUserPage && params.userName === auth?.name;
+  const isAuthenticated = !!auth?.address;
 
   const ensureAuthenticatedWithName = useCallback(async () => {
     if (auth?.address && auth?.name) {
@@ -350,19 +351,28 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     }
   }, [auth, isAuthenticatingAction]);
 
-  // Empty handler functions for now
-  const handleNavigate = (page: string) => {
-    if (page === 'home') {
-      navigate('/');
-    } else if (page === 'profile') {
-      // Navigate to current user's profile
-      if (auth?.name) {
-        navigate(`/user/${auth.name}`);
-      }
-    } else if (page === 'search') {
-      navigate('/search/users');
+  const handleProfileNavigate = useCallback(async () => {
+    const authed = await ensureAuthenticatedWithName();
+    if (!authed) return;
+    if (auth?.name) {
+      navigate(`/user/${auth.name}`);
+    } else {
+      showError('A Qortal name is required to view your profile.');
     }
-  };
+  }, [auth?.name, ensureAuthenticatedWithName, navigate]);
+
+  const handleNavigate = useCallback(
+    (page: string) => {
+      if (page === 'home') {
+        navigate('/');
+      } else if (page === 'profile') {
+        handleProfileNavigate();
+      } else if (page === 'search') {
+        navigate('/search/users');
+      }
+    },
+    [handleProfileNavigate, navigate]
+  );
 
   const handleBackToHome = useCallback(() => {
     // Check if the previous path was a post page, user page, search page, or any user tab page
@@ -874,6 +884,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           <Sidebar
             onNavigate={handleNavigate}
             onTweet={handleTweet}
+            isAuthenticated={isAuthenticated}
+            onProfileNavigate={handleProfileNavigate}
             activePage={
               isOwnProfile
                 ? 'profile'
@@ -957,6 +969,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
               userName={userName}
               isPublishing={isPublishing}
               pinnedPostIds={pinnedPostIds}
+              showAuthHint={!isAuthenticated}
             />
           )}
         </CenterSection>
@@ -1014,6 +1027,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
             isEditing={!!editingPost}
             isReplying={!!replyingToPost}
             replyToUsername={replyingToPost?.name}
+            showAuthHint={!isAuthenticated}
           />
         </Suspense>
       )}
