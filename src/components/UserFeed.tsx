@@ -3,6 +3,7 @@ import { Typography, IconButton, Avatar, Button, Box } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
+import ShareIcon from '@mui/icons-material/Share';
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -23,6 +24,8 @@ import { UserFollowingList } from './UserFollowingList';
 import { useFollowingList } from '../hooks/useFollowingList';
 import { useFetchProfile } from '../hooks/useFetchProfile';
 import { CreateProfile } from './CreateProfile';
+import { copyToClipboard } from '../utils/clipboard';
+import { showError, showSuccess } from 'qapp-core';
 
 const PageContainer = styled('div')({
   width: '100%',
@@ -90,6 +93,13 @@ const FollowButton = styled(Button)(({ theme }) => ({
   '&:hover': {
     transform: 'scale(1.05)',
   },
+}));
+
+const ActionColumn = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(1),
+  minWidth: 140,
 }));
 
 const TabsContainer = styled('div')(({ theme }) => ({
@@ -217,6 +227,17 @@ export function UserFeed({
       onFollow(userName);
     }
   };
+
+  const handleCopyProfileLink = useCallback(async () => {
+    try {
+      const url = `qortal://APP/Quittest/user/${encodeURIComponent(userName)}`;
+      await copyToClipboard(url);
+      showSuccess('Profile link copied');
+    } catch (error) {
+      console.error('Failed to copy profile link:', error);
+      showError('Failed to copy profile link. Please try again.');
+    }
+  }, [userName]);
 
   // Determine active tab from route
   const getActiveTab = () => {
@@ -380,16 +401,31 @@ export function UserFeed({
             )}
           </div>
         </UserInfoContent>
-        {!isOwnProfile && (
-          <FollowButton
-            variant={isFollowing ? 'outlined' : 'contained'}
+        <ActionColumn>
+          {!isOwnProfile && (
+            <FollowButton
+              variant={isFollowing ? 'outlined' : 'contained'}
+              color="primary"
+              startIcon={isFollowing ? <PersonRemoveIcon /> : <PersonAddIcon />}
+              onClick={handleFollowClick}
+            >
+              {isFollowing ? 'Unfollow' : 'Follow'}
+            </FollowButton>
+          )}
+          <Button
+            variant="outlined"
             color="primary"
-            startIcon={isFollowing ? <PersonRemoveIcon /> : <PersonAddIcon />}
-            onClick={handleFollowClick}
+            startIcon={<ShareIcon />}
+            onClick={handleCopyProfileLink}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 700,
+              borderRadius: '20px',
+            }}
           >
-            {isFollowing ? 'Unfollow' : 'Follow'}
-          </FollowButton>
-        )}
+            Copy Link
+          </Button>
+        </ActionColumn>
       </UserInfo>
 
       <TabsContainer>
