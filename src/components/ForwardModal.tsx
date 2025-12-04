@@ -63,10 +63,13 @@ export function ForwardModal({
   const { results, isLoading, error, searchUsers } = useSearchUsers();
   const isUserFlow = target === 'user';
   const [validationState, setValidationState] = useState<
-    'idle' | 'checking' | 'valid' | 'invalid' | 'unverified'
+    'idle' | 'checking' | 'valid' | 'invalid'
   >('idle');
   const [validationMessage, setValidationMessage] = useState<string>('');
   const validationRequestId = useRef(0);
+  const [addressCheck, setAddressCheck] = useState<
+    'idle' | 'checking' | 'valid' | 'invalid'
+  >('idle');
 
   useEffect(() => {
     if (!open) {
@@ -89,30 +92,9 @@ export function ForwardModal({
     }
   };
 
-  // Debounce search input
-  useEffect(() => {
-    if (target !== 'user') return;
-    const trimmed = query.trim();
-    if (!trimmed) {
-      setSelectedUser(null);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      searchUsers(trimmed);
-    }, 350);
-
-    return () => clearTimeout(timer);
-  }, [query, searchUsers, target]);
-
   const validateAddressFormat = (value: string) => {
     const trimmed = value.trim();
     return /^Q[1-9A-HJ-NP-Za-km-z]{25,34}$/.test(trimmed);
-  };
-
-  const validateNameFormat = (value: string) => {
-    const trimmed = value.trim();
-    return /^[a-z0-9-]{3,32}$/.test(trimmed);
   };
 
   const validateAddressApi = async (address: string): Promise<boolean> => {
@@ -150,75 +132,105 @@ export function ForwardModal({
     const trimmed = query.trim();
     if (!trimmed) {
       setSelectedUser(null);
-    }
-
-    if (!trimmed) {
       setValidationState('idle');
       setValidationMessage('');
+      setAddressCheck('idle');
       return;
     }
 
     const currentId = ++validationRequestId.current;
 
-    const runValidation = async () => {
-      // Address candidate first
-      if (trimmed.startsWith('Q')) {
-        if (!validateAddressFormat(trimmed)) {
-          if (currentId === validationRequestId.current) {
-            setValidationState('invalid');
-            setValidationMessage('Invalid name or address');
-          }
-          return;
-        }
+    const isAddressCandidate = trimmed.startsWith('Q');
+
+    if (isAddressCandidate) {
+      if (!validateAddressFormat(trimmed)) {
         if (currentId === validationRequestId.current) {
-          setValidationState('checking');
-          setValidationMessage('Checking address…');
+          setValidationState('invalid');
+          setValidationMessage('Invalid address format');
+          setAddressCheck('invalid');
+          setSelectedUser(null);
         }
+        return;
+      }
+
+      if (currentId === validationRequestId.current) {
+        setValidationState('checking');
+        setValidationMessage('Checking address…');
+        setAddressCheck('checking');
+      }
+
+      (async () => {
         try {
           const valid = await validateAddressApi(trimmed);
           if (currentId !== validationRequestId.current) return;
           if (valid) {
             setValidationState('valid');
             setValidationMessage('Valid address');
+            setAddressCheck('valid');
             if (!selectedUser || selectedUser.name !== trimmed) {
               setSelectedUser({ name: trimmed, address: trimmed });
             }
           } else {
             setValidationState('invalid');
-            setValidationMessage('Invalid name or address');
+            setValidationMessage('Invalid address');
+            setAddressCheck('invalid');
+            setSelectedUser(null);
           }
-        } catch (err) {
+        } catch {
           if (currentId !== validationRequestId.current) return;
-          setValidationState('unverified');
-          setValidationMessage('Could not validate address; proceed with caution.');
-          if (!selectedUser || selectedUser.name !== trimmed) {
-            setSelectedUser({ name: trimmed, address: trimmed });
-          }
-        }
-        return;
-      }
-
-      // Name candidate
-      if (!validateNameFormat(trimmed)) {
-        if (currentId === validationRequestId.current) {
           setValidationState('invalid');
-          setValidationMessage('Invalid name or address');
+          setValidationMessage('Could not validate address');
+          setAddressCheck('invalid');
+          setSelectedUser(null);
         }
-        return;
-      }
+      })();
+      return;
+    }
 
-      if (currentId === validationRequestId.current) {
-        setValidationState('valid');
-        setValidationMessage('Valid name');
-        if (!selectedUser) {
-          setSelectedUser({ name: trimmed });
-        }
-      }
-    };
-
-    runValidation();
+    // Reset address state for name flow; name validity decided after search results
+    setAddressCheck('idle');
+    setValidationState('checking');
+    setValidationMessage('Searching name…');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, isUserFlow]);
+
+  // Debounce name search (only when not using a valid address)
+  useEffect(() => {
+    if (!isUserFlow) return;
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const isAddressCandidate = trimmed.startsWith('Q');
+    if (isAddressCandidate && addressCheck !== 'invalid') return;
+
+    const timer = setTimeout(() => {
+      searchUsers(trimmed);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [query, searchUsers, isUserFlow, addressCheck]);
+
+  // Evaluate name validity once search results return
+  useEffect(() => {
+    if (!isUserFlow) return;
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const isAddressCandidate = trimmed.startsWith('Q');
+    if (isAddressCandidate && addressCheck !== 'invalid') return;
+
+    const exactMatch = results.find(
+      (user) => user.name.toLowerCase() === trimmed.toLowerCase()
+    );
+
+    if (exactMatch) {
+      setValidationState('valid');
+      setValidationMessage('Valid name');
+      setSelectedUser(exactMatch);
+    } else {
+      setValidationState('invalid');
+      setValidationMessage('Name not found');
+      setSelectedUser(null);
+    }
+  }, [results, isUserFlow, query, addressCheck]);
 
   const handleSelectUser = (user: UserSearchResult) => {
     setSelectedUser(user);
@@ -232,10 +244,7 @@ export function ForwardModal({
   }, [results, query]);
 
   const canContinue =
-    target === 'user'
-      ? !!selectedUser &&
-        (validationState === 'valid' || validationState === 'unverified')
-      : false; // group flow not ready yet
+    target === 'user' ? !!selectedUser && validationState === 'valid' : false; // group flow not ready yet
 
   const handleConfirm = () => {
     if (!canContinue) return;
