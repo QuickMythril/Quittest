@@ -70,6 +70,7 @@ export function ForwardModal({
   const [addressCheck, setAddressCheck] = useState<
     'idle' | 'checking' | 'valid' | 'invalid'
   >('idle');
+  const lastSearchQueryRef = useRef<string>('');
 
   useEffect(() => {
     if (!open) {
@@ -138,6 +139,11 @@ export function ForwardModal({
       return;
     }
 
+    if (trimmed === lastSearchQueryRef.current) {
+      return;
+    }
+    lastSearchQueryRef.current = trimmed;
+
     const currentId = ++validationRequestId.current;
 
     const isAddressCandidate = trimmed.startsWith('Q');
@@ -203,8 +209,11 @@ export function ForwardModal({
     if (isAddressCandidate && addressCheck !== 'invalid') return;
 
     const timer = setTimeout(() => {
+      if (trimmed !== lastSearchQueryRef.current) {
+        lastSearchQueryRef.current = trimmed;
+      }
       searchUsers(trimmed);
-    }, 350);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [query, searchUsers, isUserFlow, addressCheck]);
