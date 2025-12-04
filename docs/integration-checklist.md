@@ -9,12 +9,12 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 - [x] Mention/reply metadata: hash and embed mentions/replies into publish/update descriptions for notification discovery.
 - [x] Mentions: @-autocomplete/search in composer, styled mentions in contentEditable, clickable mentions in posts, and mention parsing in parent-post previews.
 - [x] Notification sound: Web Audio chime utility and settings/test trigger.
-- [ ] Notification storage plumbing: IndexedDB/localforage store for shown IDs and preferences; initialization at layout bootstrap.
-- [ ] Notifications UI: `/notifications` route/page with tabs and settings; sidebar badge/nav; snackbar click-through.
+- [x] Notification storage plumbing: IndexedDB/localforage store for shown IDs and preferences; initialization at layout bootstrap.
+- [x] Notifications UI: `/notifications` route/page with tabs and settings; sidebar badge/nav; snackbar click-through.
 - [ ] Notifications: polling followers/mentions/replies, unread tracking, persisted preferences (snackbar/sound), last-viewed timestamp, and snackbar popup.
 
 ## Notifications (polling, unread, persisted prefs)
-- [ ] src/hooks/useNotifications.ts
+- [x] src/hooks/useNotifications.ts
 - [x] src/state/global/notifications.ts
 - [ ] src/utils/notificationTimestamp.ts
 - [ ] src/utils/notificationStorageDB.ts
@@ -24,8 +24,8 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 ## Notifications UI (route, page, sidebar, snackbar click)
 - [x] src/components/NotificationsPage.tsx
 - [x] src/routes/Routes.tsx
-- [ ] src/components/SocialApp.tsx
-- [ ] src/components/Sidebar.tsx
+- [x] src/components/SocialApp.tsx
+- [x] src/components/Sidebar.tsx
 - [ ] src/styles/Layout.tsx
 
 ## Mentions (composer + rendering)
@@ -56,8 +56,8 @@ Use this list to track re-adding v0.0.2 functionality into main. Check items off
 
 ## Notification sound
 - [x] src/utils/notificationSound.ts
-- [ ] src/components/NotificationSnackbar.tsx
-- [ ] src/components/NotificationsPage.tsx
+- [x] src/components/NotificationSnackbar.tsx
+- [x] src/components/NotificationsPage.tsx
 
 ## Clipboard robustness
 - [x] src/utils/clipboard.ts

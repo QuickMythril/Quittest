@@ -65,6 +65,7 @@ import { NotificationsPage } from './NotificationsPage';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAtom } from 'jotai';
 import { hasUnreadNotificationsAtom } from '../state/global/notifications';
+import { setLastViewedNotificationsTimestamp } from '../utils/notificationTimestamp';
 import { NotificationSnackbar } from './NotificationSnackbar';
 import { NotificationsPage } from './NotificationsPage';
 import { useNotifications } from '../hooks/useNotifications';
@@ -311,6 +312,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const [hasUnreadNotifications, setHasUnreadNotifications] = useAtom(
     hasUnreadNotificationsAtom
   );
+  const [, setLastViewed] = useState(0);
 
   // Track navigation history to determine if we came from another post
   const previousPathRef = useRef<string>('');
@@ -444,6 +446,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     const userFollowersPattern = /^\/user\/[^/]+\/followers$/;
     const userFollowingPattern = /^\/user\/[^/]+\/following$/;
     const searchPagePattern = /^\/search\/(users|hashtags)/;
+    const notificationsPagePattern = /^\/notifications$/;
     const canGoBack =
       previousPathRef.current &&
       (postPagePattern.test(previousPathRef.current) ||
@@ -451,7 +454,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         userRepliesPattern.test(previousPathRef.current) ||
         userFollowersPattern.test(previousPathRef.current) ||
         userFollowingPattern.test(previousPathRef.current) ||
-        searchPagePattern.test(previousPathRef.current));
+        searchPagePattern.test(previousPathRef.current) ||
+        notificationsPagePattern.test(previousPathRef.current));
 
     if (canGoBack) {
       // Go back in history if we came from another post, user page (any tab), or search page
