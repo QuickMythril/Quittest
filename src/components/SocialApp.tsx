@@ -729,13 +729,32 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     }
   }, []);
 
-  const handleForward = useCallback((postId: string, postName: string, text?: string, author?: string, created?: number) => {
-    if (!postId || !postName) {
-      showError('Unable to forward: missing post details.');
-      return;
-    }
-    setForwardTarget({ id: postId, name: postName, text, author, created });
-  }, []);
+  const handleForward = useCallback(
+    (
+      postId: string,
+      postName: string,
+      text?: string,
+      author?: string,
+      created?: number,
+      hasImages?: boolean,
+      hasVideos?: boolean
+    ) => {
+      if (!postId || !postName) {
+        showError('Unable to forward: missing post details.');
+        return;
+      }
+      setForwardTarget({
+        id: postId,
+        name: postName,
+        text,
+        author,
+        created,
+        hasImages,
+        hasVideos,
+      });
+    },
+    []
+  );
 
   const handleCloseForward = useCallback(() => {
     setForwardTarget(null);

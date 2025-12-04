@@ -545,7 +545,9 @@ interface PostProps {
     postName: string,
     text?: string,
     author?: string,
-    created?: number
+    created?: number,
+    hasImages?: boolean,
+    hasVideos?: boolean
   ) => void;
   onEdit?: (postId: string, post: PostData) => void;
   onDelete?: (post: PostData) => void;
@@ -1365,7 +1367,9 @@ export function Post({
                   post.qortalMetadata.name,
                   post.data?.text || '',
                   undefined,
-                  post.data?.created || post.qortalMetadata.created
+                  post.data?.created || post.qortalMetadata.created,
+                  !!post.data?.images?.length,
+                  !!post.data?.videos?.length
                 );
               }}
             >

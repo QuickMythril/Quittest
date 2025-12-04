@@ -6,6 +6,8 @@ interface BuildPayloadArgs {
   text?: string;
   author?: string;
   created?: number;
+  hasImages?: boolean;
+  hasVideos?: boolean;
 }
 
 export interface ForwardPayload {
@@ -49,6 +51,8 @@ export function buildForwardPayload({
   text,
   author,
   created,
+  hasImages,
+  hasVideos,
 }: BuildPayloadArgs): ForwardPayload {
   const link = `qortal://APP/Quittest/post/${encodeURIComponent(postName)}/${encodeURIComponent(postId)}`;
   const authorFromLink = decodeURIComponent(link.split('/')[5] || postName || 'Unknown');
@@ -105,8 +109,14 @@ export function buildForwardPayload({
     };
   };
 
+  const mediaMarkers = [];
+  if (hasImages) mediaMarkers.push('[IMAGE]');
+  if (hasVideos) mediaMarkers.push('[VIDEO]');
+  const combinedText =
+    [text || '', mediaMarkers.join(' ')].filter(Boolean).join('\n').trim();
+
   const blockquoteNode =
-    text && text.length ? buildQuoteNode(text) : null;
+    combinedText && combinedText.length ? buildQuoteNode(combinedText) : null;
 
   const doc = {
     type: 'doc',
