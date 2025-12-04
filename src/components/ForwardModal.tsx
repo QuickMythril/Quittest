@@ -16,7 +16,6 @@ import {
   ListItemText,
   CircularProgress,
   Chip,
-  TextField,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
