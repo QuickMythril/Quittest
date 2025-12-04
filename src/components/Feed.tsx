@@ -33,7 +33,6 @@ import Chip from '@mui/material/Chip';
 
 const FeedContainer = styled('div')({
   width: '100%',
-  maxWidth: '600px',
   minHeight: '100vh',
   position: 'relative',
 });

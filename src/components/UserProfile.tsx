@@ -4,7 +4,6 @@ import { useFetchProfile } from '../hooks/useFetchProfile';
 
 const ProfileContainer = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-  maxWidth: '600px',
   margin: '0 auto',
 }));
 
@@ -77,4 +76,3 @@ export function UserProfile({ qortalName }: UserProfileProps) {
     </ProfileContainer>
   );
 }
-
