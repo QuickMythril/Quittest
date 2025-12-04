@@ -9,6 +9,7 @@ import { ResourceListDisplay, LoaderListStatus } from 'qapp-core';
 import { LoaderState, LoaderItem } from '../LoaderState';
 import { ENTITY_POST, ENTITY_ROOT } from '../../constants/qdn';
 import { QortalSearchParams } from 'qapp-core';
+import { TrendingHashtags } from './TrendingHashtags';
 
 const ResultsContainer = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -146,15 +147,7 @@ export function HashtagSearchResults({
   );
 
   if (!searchQuery) {
-    return (
-      <EmptyState>
-        <TagIcon sx={{ fontSize: 64, opacity: 0.3 }} />
-        <Typography variant="h6">Search for hashtags</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Discover posts by hashtag
-        </Typography>
-      </EmptyState>
-    );
+    return <TrendingHashtags onSelectHashtag={(tag) => setSearchParams({ q: tag })} />;
   }
 
   if (!hashtagSearch) {
