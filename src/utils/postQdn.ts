@@ -215,11 +215,28 @@ export function stringToBase64(str: string): string {
 /**
  * Normalize each keyword for searchability and wrap with delimiters
  */
-function normalizeKeywords(strings: string[]): string {
-  const normalizedStrings = strings.map((str) => {
-    const normalized = str.trim().toLowerCase();
-    return `~${normalized}~`;
-  });
+function normalizeKeywords(strings: string[], maxLength = 150): string {
+  const normalizedStrings: string[] = [];
+  const seen = new Set<string>();
+  let totalLength = 0;
+
+  for (const raw of strings) {
+    const normalized = raw.trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) continue;
+
+    // Space for comma if not first, plus tilde wrappers
+    const separatorLength = totalLength === 0 ? 0 : 1;
+    const available = maxLength - totalLength - separatorLength - 2; // 2 for wrapping tildes
+    if (available <= 0) break;
+
+    const truncated = normalized.slice(0, available);
+    if (!truncated) break;
+
+    const token = `~${truncated}~`;
+    normalizedStrings.push(token);
+    totalLength += separatorLength + token.length;
+    seen.add(normalized);
+  }
 
   return normalizedStrings.join(',');
 }
@@ -419,12 +436,7 @@ export async function publishPost({
     let keywordString = '';
 
     if (hashtagMatches && hashtagMatches.length > 0) {
-      // Only take first 2 hashtags and trim them to ensure combined length stays under 150
-      const keywords = hashtagMatches.slice(0, 2).map((tag) => {
-        // Trim each hashtag to max 70 characters to ensure 2 won't exceed 150
-        return tag.length > 70 ? tag.substring(0, 70) : tag;
-      });
-      keywordString = normalizeKeywords(keywords);
+      keywordString = normalizeKeywords(hashtagMatches);
     }
 
     // Convert post metadata to base64
@@ -671,12 +683,7 @@ export async function publishReply({
     let keywordString = '';
 
     if (hashtagMatches && hashtagMatches.length > 0) {
-      // Only take first 2 hashtags and trim them to ensure combined length stays under 150
-      const keywords = hashtagMatches.slice(0, 2).map((tag) => {
-        // Trim each hashtag to max 70 characters to ensure 2 won't exceed 150
-        return tag.length > 70 ? tag.substring(0, 70) : tag;
-      });
-      keywordString = normalizeKeywords(keywords);
+      keywordString = normalizeKeywords(hashtagMatches);
     }
 
     // Convert reply metadata to base64
@@ -793,12 +800,7 @@ export async function publishRepost({
     let keywordString = '';
 
     if (hashtagMatches && hashtagMatches.length > 0) {
-      // Only take first 2 hashtags and trim them to ensure combined length stays under 150
-      const keywords = hashtagMatches.slice(0, 2).map((tag) => {
-        // Trim each hashtag to max 70 characters to ensure 2 won't exceed 150
-        return tag.length > 70 ? tag.substring(0, 70) : tag;
-      });
-      keywordString = normalizeKeywords(keywords);
+      keywordString = normalizeKeywords(hashtagMatches);
     }
 
     // Convert repost metadata to base64
@@ -1144,12 +1146,7 @@ export async function updatePost(
     let keywordString = '';
 
     if (hashtagMatches && hashtagMatches.length > 0) {
-      // Only take first 2 hashtags and trim them to ensure combined length stays under 150
-      const keywords = hashtagMatches.slice(0, 2).map((tag) => {
-        // Trim each hashtag to max 70 characters to ensure 2 won't exceed 150
-        return tag.length > 70 ? tag.substring(0, 70) : tag;
-      });
-      keywordString = normalizeKeywords(keywords);
+      keywordString = normalizeKeywords(hashtagMatches);
     }
 
     // Convert updated post to base64
