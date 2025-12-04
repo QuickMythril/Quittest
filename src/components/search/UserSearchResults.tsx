@@ -11,6 +11,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import { useSearchUsers } from '../../hooks/useSearchUsers';
 import { useFetchProfile } from '../../hooks/useFetchProfile';
 import { useGlobal } from 'qapp-core';
+import { useRecentProfiles } from '../../hooks/useRecentProfiles';
 
 const ResultsContainer = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -75,6 +76,11 @@ export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const { results: userResults, isLoading, searchUsers } = useSearchUsers();
+  const {
+    results: recentProfiles,
+    isLoading: isLoadingRecent,
+    error: recentError,
+  } = useRecentProfiles();
 
   // Initialize from URL params and trigger search when query changes
   useEffect(() => {
@@ -94,12 +100,52 @@ export function UserSearchResults({ onUserClick }: UserSearchResultsProps) {
   };
 
   const hasResults = userResults.length > 0;
+  const showRecent = !searchQuery;
 
-  if (isLoading) {
+  if (isLoading || (showRecent && isLoadingRecent)) {
     return (
       <LoadingContainer>
         <CircularProgress />
       </LoadingContainer>
+    );
+  }
+
+  if (showRecent) {
+    if (recentError) {
+      return (
+        <EmptyState>
+          <PersonIcon sx={{ fontSize: 64, opacity: 0.3 }} />
+          <Typography variant="h6">Unable to load profiles</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {recentError.message}
+          </Typography>
+        </EmptyState>
+      );
+    }
+
+    if (!recentProfiles.length) {
+      return (
+        <EmptyState>
+          <PersonIcon sx={{ fontSize: 64, opacity: 0.3 }} />
+          <Typography variant="h6">No recent profiles</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Check back soon to discover new users
+          </Typography>
+        </EmptyState>
+      );
+    }
+
+    return (
+      <ResultsContainer>
+        {recentProfiles.map((user) => (
+          <UserResultCard
+            key={user.name}
+            userName={user.name}
+            currentUserName={auth?.name || undefined}
+            onClick={() => handleUserItemClick(user.name)}
+          />
+        ))}
+      </ResultsContainer>
     );
   }
 
@@ -209,4 +255,3 @@ function UserResultCard({
     </UserResultItem>
   );
 }
-
