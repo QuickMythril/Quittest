@@ -82,6 +82,10 @@ export function ForwardModal({
   const [groupError, setGroupError] = useState<string | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const authAddress = auth?.address;
+  const generalChat = useMemo(
+    () => [{ groupId: 0, groupName: 'General Chat' }],
+    []
+  );
 
   useEffect(() => {
     if (!open) {
@@ -91,12 +95,12 @@ export function ForwardModal({
       setValidationState('idle');
       setValidationMessage('');
       setAddressCheck('idle');
-      setGroups([]);
+      setGroups(generalChat);
       setGroupFilter('');
       setGroupError(null);
       setSelectedGroupId(null);
     }
-  }, [open]);
+  }, [open, generalChat]);
 
   const handleChange = (_: MouseEvent<HTMLElement>, value: ForwardTarget) => {
     if (value) {
@@ -273,11 +277,11 @@ export function ForwardModal({
     const fetchGroups = async () => {
       if (isUserFlow) return;
       if (!authAddress) {
-        setGroups([]);
-        setGroupError('Authenticate to load your groups.');
+        setGroups(generalChat);
+        setGroupError(null);
         return;
       }
-      if (groups.length) return;
+      if (groups.length > generalChat.length) return;
       setGroupLoading(true);
       setGroupError(null);
       try {
@@ -298,11 +302,18 @@ export function ForwardModal({
                 memberCount: g.memberCount,
               }))
             : [];
-        setGroups(mapped);
+        const merged = [
+          ...generalChat,
+          ...mapped.filter((g: any) => g.groupId !== 0),
+        ];
+        setGroups(merged);
       } catch (err) {
         console.error('Error fetching groups', err);
+        setGroups(generalChat);
         setGroupError(
-          err instanceof Error ? err.message : 'Failed to load groups'
+          err instanceof Error
+            ? `${err.message}. General Chat is available.`
+            : 'Failed to load groups. General Chat is available.'
         );
       } finally {
         setGroupLoading(false);
@@ -310,7 +321,7 @@ export function ForwardModal({
     };
 
     fetchGroups();
-  }, [isUserFlow, authAddress, groups.length]);
+  }, [isUserFlow, authAddress, groups.length, generalChat]);
 
   const filteredGroups = useMemo(() => {
     const filter = groupFilter.trim().toLowerCase();
@@ -603,21 +614,6 @@ export function ForwardModal({
                     Loading your groups...
                   </Typography>
                 </Box>
-              ) : groupError ? (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: 140,
-                    px: 2,
-                    textAlign: 'center',
-                  }}
-                >
-                  <Typography variant="body2" color="error">
-                    {groupError}
-                  </Typography>
-                </Box>
               ) : filteredGroups.length ? (
                 <List dense disablePadding>
                   {filteredGroups.map((group) => (
@@ -681,6 +677,15 @@ export function ForwardModal({
                 </Box>
               )}
             </Box>
+            {groupError && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mt: 1 }}
+              >
+                {groupError}
+              </Typography>
+            )}
           </Box>
         )}
 
