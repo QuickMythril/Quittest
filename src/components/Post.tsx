@@ -1364,7 +1364,7 @@ export function Post({
                   post.qortalMetadata.identifier,
                   post.qortalMetadata.name,
                   post.data?.text || '',
-                  originalPostAuthor || post.qortalMetadata.name,
+                  undefined,
                   post.data?.created || post.qortalMetadata.created
                 );
               }}

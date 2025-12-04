@@ -47,10 +47,11 @@ export function buildForwardPayload({
   postId,
   postName,
   text,
-  author,
-  created,
-}: BuildPayloadArgs): ForwardPayload {
+    author,
+    created,
+  }: BuildPayloadArgs): ForwardPayload {
   const link = `qortal://APP/Quittest/post/${encodeURIComponent(postName)}/${encodeURIComponent(postId)}`;
+  const authorFromLink = decodeURIComponent(link.split('/')[5] || postName || 'Unknown');
   const cleanText = (text || '').replace(/\s+/g, ' ').trim();
   const baseLinkBytes = encoder.encode(link).length;
 
@@ -73,7 +74,7 @@ export function buildForwardPayload({
     { type: 'text', text: 'Posted by ' },
     {
       type: 'text',
-      text: author || 'Unknown',
+      text: author || authorFromLink || 'Unknown',
       marks: [{ type: 'bold' }],
     },
     ...(ago ? [{ type: 'text', text: ` – ${ago}` }] : []),
