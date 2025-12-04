@@ -948,6 +948,7 @@ export function Post({
       /(^|[\s])(@\{[^}]+\}|@[a-zA-Z0-9_-]+|#\w+)|(https?:\/\/[^\s]+|qortal:\/\/[^\s]+)/g;
 
     const elements: (string | JSX.Element | null)[] = [];
+    const seenHashtags = new Set<string>();
     let lastIndex = 0;
     let matchIndex = 0;
 
@@ -981,14 +982,20 @@ export function Post({
         const tag = tagWithPrefix;
         // Check if it's a hashtag
         if (tag.startsWith('#')) {
-          elements.push(
-            <Hashtag
-              key={matchIndex}
-              onClick={(e) => handleHashtagClick(e, tag)}
-            >
-              {tag}
-            </Hashtag>
-          );
+          const normalized = tag.toLowerCase();
+          if (seenHashtags.has(normalized)) {
+            elements.push(tag);
+          } else {
+            seenHashtags.add(normalized);
+            elements.push(
+              <Hashtag
+                key={matchIndex}
+                onClick={(e) => handleHashtagClick(e, tag)}
+              >
+                {tag}
+              </Hashtag>
+            );
+          }
         }
         // Check if it's a mention (@username or @{username with spaces})
         else if (tag.startsWith('@')) {

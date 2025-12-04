@@ -509,6 +509,118 @@ export function NewPostInput({
     }, 500); // 500ms debounce
   };
 
+  // Handle mention selection from autocomplete
+  const handleMentionSelect = (mentionName: string) => {
+    if (contentEditableRef.current) {
+      const selection = window.getSelection();
+      if (selection?.rangeCount) {
+        const plainText = extractPlainText(
+          contentEditableRef.current.innerHTML
+        );
+        const cursorPosition = getCursorPosition(
+          contentEditableRef.current,
+          selection.getRangeAt(0)
+        );
+
+        // Find the @ symbol position
+        const textBeforeCursor = plainText.substring(0, cursorPosition);
+        const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+        if (lastAtIndex !== -1) {
+          // Format mention: wrap in {} only if name contains space
+          const formattedMention = mentionName.includes(' ')
+            ? `@{${mentionName}}`
+            : `@${mentionName}`;
+
+          // Replace from @ to cursor with formatted mention
+          const newText =
+            plainText.substring(0, lastAtIndex) +
+            formattedMention +
+            ' ' +
+            plainText.substring(cursorPosition);
+
+          setText(newText);
+
+          // Update the contentEditable
+          contentEditableRef.current.innerHTML =
+            formatTextWithHashtags(newText);
+
+          // Set cursor after the mention and space
+          const newCursorPosition = lastAtIndex + formattedMention.length + 1; // +1 for space
+          setCursorPosition(contentEditableRef.current, newCursorPosition);
+
+          // Focus back on the contentEditable
+          contentEditableRef.current.focus();
+        }
+      }
+    }
+
+    setShowMentionPopover(false);
+    setMentionSuggestions([]);
+    setMentionSearchQuery('');
+    mentionPopoverPositionSetRef.current = false;
+  };
+
+  // Handle mention search input change
+  const handleMentionSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const query = e.target.value;
+    setMentionSearchQuery(query);
+
+    // Show loader immediately while we wait for debounced search
+    if (query) {
+      setIsMentionSearching(true);
+    } else {
+      // If query is empty, clear results and hide loader
+      setMentionSuggestions([]);
+      setIsMentionSearching(false);
+    }
+
+    searchMentionUsers(query, false); // Don't show loader again since we already set it
+  };
+
+  // Handle keyboard navigation in mention popover
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showMentionPopover && mentionSuggestions.length > 0) {
+      // Don't handle arrow keys if focus is in the search input
+      const isSearchInputFocused =
+        document.activeElement === mentionSearchInputRef.current;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!isSearchInputFocused) {
+          setSelectedMentionIndex((prev) =>
+            prev < mentionSuggestions.length - 1 ? prev + 1 : prev
+          );
+        } else {
+          // Move focus from input to list
+          setSelectedMentionIndex(0);
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!isSearchInputFocused) {
+          setSelectedMentionIndex((prev) => (prev > 0 ? prev - 1 : 0));
+        }
+      } else if (e.key === 'Enter') {
+        if (!isSearchInputFocused && mentionSuggestions.length > 0) {
+          e.preventDefault();
+          handleMentionSelect(mentionSuggestions[selectedMentionIndex]);
+        }
+      } else if (e.key === 'Tab') {
+        if (mentionSuggestions.length > 0) {
+          e.preventDefault();
+          handleMentionSelect(mentionSuggestions[selectedMentionIndex]);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowMentionPopover(false);
+        setMentionSearchQuery('');
+        mentionPopoverPositionSetRef.current = false;
+      }
+    }
+  };
+
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
@@ -668,6 +780,8 @@ export function NewPostInput({
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
 
+    const seenHashtags = new Set<string>();
+
     // Apply formatting for hashtags and mentions
     // Only match @ and # when preceded by whitespace or at start of text
     // Matches: #hashtag (with word boundary), @username, @{username with spaces}
@@ -675,6 +789,11 @@ export function NewPostInput({
       /(^|[\s])(@\{[^}]+\}|@[a-zA-Z0-9_-]+|#\w+)/g,
       (match, prefix, tag) => {
         if (tag.startsWith('#')) {
+          const normalized = tag.toLowerCase();
+          if (seenHashtags.has(normalized)) {
+            return `${prefix}${tag}`; // duplicates render as plain text
+          }
+          seenHashtags.add(normalized);
           return `${prefix}<span class="hashtag">${tag}</span>`;
         } else if (tag.startsWith('@')) {
           return `${prefix}<span class="mention">${tag}</span>`;
