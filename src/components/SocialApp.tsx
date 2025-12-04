@@ -14,6 +14,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
 import AddIcon from '@mui/icons-material/Add';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import { NameSwitcher } from './NameSwitcher';
 import { Feed } from './Feed';
 import { PostPage } from './PostPage';
@@ -59,6 +60,16 @@ import {
   handleUnfollowUser,
 } from '../utils/followingHelpers';
 import { buildForwardPayload, ForwardPayload } from '../utils/forwardPayload';
+import { NotificationSnackbar } from './NotificationSnackbar';
+import { NotificationsPage } from './NotificationsPage';
+import { useNotifications } from '../hooks/useNotifications';
+import { useAtom } from 'jotai';
+import { hasUnreadNotificationsAtom } from '../state/global/notifications';
+import { NotificationSnackbar } from './NotificationSnackbar';
+import { NotificationsPage } from './NotificationsPage';
+import { useNotifications } from '../hooks/useNotifications';
+import { useAtom } from 'jotai';
+import { hasUnreadNotificationsAtom } from '../state/global/notifications';
 
 // Declare qortalRequest as a global function (provided by Qortal runtime)
 declare global {
@@ -297,6 +308,9 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isAuthenticatingAction, setIsAuthenticatingAction] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useAtom(
+    hasUnreadNotificationsAtom
+  );
 
   // Track navigation history to determine if we came from another post
   const previousPathRef = useRef<string>('');
@@ -310,6 +324,9 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     refetch: refetchFollows,
   } = useFollowsList();
 
+  // Fetch notifications when user's name becomes available
+  // This hook stores the data in Jotai atoms and polls every 80 seconds
+  useNotifications();
   const setFollowedUsers = useSetAtom(followedUsersAtom);
 
   // Log follows data for debugging
@@ -357,6 +374,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const isPostPage = !!params.postId && !!params.name;
   const isUserPage = !!params.userName && !params.postId;
   const isSearchPage = location.pathname.startsWith('/search');
+  const isNotificationsPage = location.pathname === '/notifications';
   const authedName = auth?.name ?? '';
   const authedAddress = auth?.address ?? '';
   const isOwnProfile = isUserPage && params.userName === authedName;
@@ -411,6 +429,8 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         handleProfileNavigate();
       } else if (page === 'search') {
         navigate('/search/users');
+      } else if (page === 'notifications') {
+        navigate('/notifications');
       }
     },
     [handleProfileNavigate, navigate]
@@ -1056,6 +1076,12 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
           >
             <PersonIcon />
           </IconButton>
+          <IconButton
+            color={hasUnreadNotifications ? 'error' : 'primary'}
+            onClick={() => handleNavigate('notifications')}
+          >
+            <NotificationsIcon />
+          </IconButton>
         </TopNavGroup>
         <TopNavGroup>
           <IconButton color="primary" onClick={handleTweet}>
@@ -1076,9 +1102,11 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
                 ? 'profile'
                 : isSearchPage
                   ? 'search'
-                  : !isPostPage && !isUserPage
-                    ? 'home'
-                    : undefined
+                  : isNotificationsPage
+                    ? 'notifications'
+                    : !isPostPage && !isUserPage
+                      ? 'home'
+                      : undefined
             }
           />
         </LeftSection>
@@ -1141,25 +1169,33 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
               onUnfollow={handleUnfollow}
             />
           ) : (
-            <Feed
-              onNewPost={handleNewPost}
-              onLike={handleLike}
-              onRetweet={handleRetweet}
-              onReply={handleReply}
-              onShare={handleShare}
-              onForward={handleForward}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onPin={handlePin}
-              onPostClick={handlePostClick}
-              onUserClick={handleUserClick}
-              onHashtagClick={handleHashtagClick}
-              userAvatar={userAvatar}
-              userName={userName}
-              isPublishing={isPublishing}
-              pinnedPostIds={pinnedPostIds}
-              showAuthHint={!isAuthenticated}
-            />
+            isNotificationsPage ? (
+              <NotificationsPage
+                onBack={handleBackToHome}
+                onUserClick={handleUserClick}
+                onPostClick={handlePostClick}
+              />
+            ) : (
+              <Feed
+                onNewPost={handleNewPost}
+                onLike={handleLike}
+                onRetweet={handleRetweet}
+                onReply={handleReply}
+                onShare={handleShare}
+                onForward={handleForward}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onPin={handlePin}
+                onPostClick={handlePostClick}
+                onUserClick={handleUserClick}
+                onHashtagClick={handleHashtagClick}
+                userAvatar={userAvatar}
+                userName={userName}
+                isPublishing={isPublishing}
+                pinnedPostIds={pinnedPostIds}
+                showAuthHint={!isAuthenticated}
+              />
+            )
           )}
         </CenterSection>
 
