@@ -9,14 +9,29 @@ import {
   Button,
   IconButton,
   Box,
+  TextField,
+  InputAdornment,
+  List,
+  ListItemButton,
+  ListItemText,
+  CircularProgress,
+  Chip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
-import { useState, useEffect, MouseEvent } from 'react';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
+import { useState, useEffect, MouseEvent, useMemo } from 'react';
+import { useSearchUsers, UserSearchResult } from '../hooks/useSearchUsers';
 
 type ForwardTarget = 'user' | 'group';
+
+export interface ForwardSelection {
+  target: ForwardTarget;
+  user?: { name: string; address?: string };
+}
 
 interface ForwardModalProps {
   open: boolean;
@@ -24,6 +39,7 @@ interface ForwardModalProps {
   postName?: string;
   onClose: () => void;
   onSelectPath?: (target: ForwardTarget) => void;
+  onConfirm?: (selection: ForwardSelection) => void;
 }
 
 export function ForwardModal({
@@ -32,12 +48,20 @@ export function ForwardModal({
   postName,
   onClose,
   onSelectPath,
+  onConfirm,
 }: ForwardModalProps) {
   const [target, setTarget] = useState<ForwardTarget>('user');
+  const [query, setQuery] = useState('');
+  const [selectedUser, setSelectedUser] = useState<UserSearchResult | null>(
+    null
+  );
+  const { results, isLoading, error, searchUsers } = useSearchUsers();
 
   useEffect(() => {
     if (!open) {
       setTarget('user');
+      setQuery('');
+      setSelectedUser(null);
     }
   }, [open]);
 
@@ -45,6 +69,50 @@ export function ForwardModal({
     if (value) {
       setTarget(value);
       onSelectPath?.(value);
+      // Reset user selection when switching targets
+      if (value !== 'user') {
+        setSelectedUser(null);
+      }
+    }
+  };
+
+  // Debounce search input
+  useEffect(() => {
+    if (target !== 'user') return;
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setSelectedUser(null);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      searchUsers(trimmed);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [query, searchUsers, target]);
+
+  const handleSelectUser = (user: UserSearchResult) => {
+    setSelectedUser(user);
+  };
+
+  const userOptions = useMemo(() => {
+    if (!query.trim()) return results;
+    return results;
+  }, [results, query]);
+
+  const isUserFlow = target === 'user';
+  const canContinue =
+    target === 'user' ? !!selectedUser : false; // group flow not ready yet
+
+  const handleConfirm = () => {
+    if (!canContinue) return;
+    if (target === 'user' && selectedUser) {
+      onConfirm?.({
+        target,
+        user: { name: selectedUser.name },
+      });
+      onClose();
     }
   };
 
@@ -104,6 +172,136 @@ export function ForwardModal({
           </ToggleButton>
         </ToggleButtonGroup>
 
+        {isUserFlow && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <TextField
+              label="Search user or address"
+              size="small"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+                endAdornment: query ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      aria-label="Clear search"
+                      onClick={() => {
+                        setQuery('');
+                        setSelectedUser(null);
+                      }}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
+              }}
+              placeholder="Type a name or address"
+              fullWidth
+              autoFocus
+            />
+            <Box
+              sx={{
+                minHeight: 140,
+                maxHeight: 220,
+                overflowY: 'auto',
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+              }}
+            >
+              {isLoading ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 140,
+                    gap: 1,
+                  }}
+                >
+                  <CircularProgress size={18} />
+                  <Typography variant="body2" color="text.secondary">
+                    Searching users...
+                  </Typography>
+                </Box>
+              ) : error ? (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 140,
+                    px: 2,
+                    textAlign: 'center',
+                  }}
+                >
+                  <Typography variant="body2" color="error">
+                    Failed to search users. Try again.
+                  </Typography>
+                </Box>
+              ) : userOptions.length ? (
+                <List dense disablePadding>
+                  {userOptions.map((user) => (
+                    <ListItemButton
+                      key={user.name}
+                      selected={selectedUser?.name === user.name}
+                      onClick={() => handleSelectUser(user)}
+                    >
+                      <ListItemText
+                        primary={user.name}
+                        secondary={
+                          user.postCount !== undefined
+                            ? `${user.postCount} posts`
+                            : undefined
+                        }
+                        primaryTypographyProps={{
+                          fontWeight:
+                            selectedUser?.name === user.name ? 700 : 500,
+                        }}
+                      />
+                      {selectedUser?.name === user.name && (
+                        <Chip
+                          label="Selected"
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      )}
+                    </ListItemButton>
+                  ))}
+                </List>
+              ) : query.trim() ? (
+                <List dense disablePadding>
+                  <ListItemButton onClick={() => handleSelectUser({ name: query.trim() })}>
+                    <ListItemText
+                      primary={`Use "${query.trim()}"`}
+                      secondary="No match found; forward to this name/address"
+                    />
+                  </ListItemButton>
+                </List>
+              ) : (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: 140,
+                  }}
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Start typing to search for a user.
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        )}
+
         <Box
           sx={{
             p: 1.5,
@@ -146,7 +344,8 @@ export function ForwardModal({
           color="primary"
           size="small"
           startIcon={<SendIcon fontSize="small" />}
-          disabled
+          disabled={!canContinue}
+          onClick={handleConfirm}
         >
           Continue
         </Button>

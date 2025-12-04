@@ -37,7 +37,7 @@ Add a "Forward to chat" button on each post to share post content via chat to a 
    - Build the modal shell (title, close, content area, primary action disabled by default).
    - Option toggles for user vs. group; keep modal small.
 
-3) **User flow – recipient search**
+3) **User flow – recipient search** ✅
    - Add a text input with debounce that searches names/addresses (reuse SEARCH_NAMES + optional address validation).
    - Show autocomplete list; allow selecting a recipient; store address/name.
    - Disable send until a recipient is selected.

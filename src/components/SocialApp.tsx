@@ -21,7 +21,7 @@ import { UserFeed } from './UserFeed';
 import { SearchPage } from './SearchPage';
 import { Sidebar } from './Sidebar';
 import { PostContent } from './NewPostInput';
-import { ForwardModal } from './ForwardModal';
+import { ForwardModal, ForwardSelection } from './ForwardModal';
 import {
   useGlobal,
   showError,
@@ -738,6 +738,17 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     setForwardTarget((prev) => (prev ? { ...prev, target } : prev));
   }, []);
 
+  const handleForwardConfirm = useCallback(
+    (selection: ForwardSelection) => {
+      setForwardTarget((prev) =>
+        prev ? { ...prev, target: selection.target } : prev
+      );
+      // Sending will be wired in later steps; for now just close the modal.
+      handleCloseForward();
+    },
+    [handleCloseForward]
+  );
+
   const handleEdit = useCallback((postId: string, post: PostData) => {
     setEditingPost({ id: postId, post });
     setIsPostModalOpen(true);
@@ -1126,6 +1137,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         postName={forwardTarget?.name}
         onClose={handleCloseForward}
         onSelectPath={handleForwardPathSelect}
+        onConfirm={handleForwardConfirm}
       />
 
       {/* Scroll to top button */}
