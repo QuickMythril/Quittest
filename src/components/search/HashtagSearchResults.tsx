@@ -9,7 +9,8 @@ import { ResourceListDisplay, LoaderListStatus } from 'qapp-core';
 import { LoaderState, LoaderItem } from '../LoaderState';
 import { ENTITY_POST, ENTITY_ROOT } from '../../constants/qdn';
 import { QortalSearchParams } from 'qapp-core';
-import { TrendingHashtags } from './TrendingHashtags';
+import { useTrendingHashtags } from '../../hooks/useTrendingHashtags';
+import { HashtagList } from './HashtagList';
 
 const ResultsContainer = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -56,6 +57,11 @@ export function HashtagSearchResults({
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const {
+    tags: trendingTags,
+    isLoading: isLoadingTrending,
+    error: trendingError,
+  } = useTrendingHashtags();
 
   // Initialize from URL params and trigger search immediately when query changes
   useEffect(() => {
@@ -147,7 +153,15 @@ export function HashtagSearchResults({
   );
 
   if (!searchQuery) {
-    return <TrendingHashtags onSelectHashtag={(tag) => setSearchParams({ q: tag })} />;
+    return (
+      <HashtagList
+        title="Trending hashtags"
+        tags={trendingTags.map(({ tag, count }) => ({ tag, count }))}
+        isLoading={isLoadingTrending}
+        error={trendingError}
+        onSelect={(tag) => setSearchParams({ q: tag })}
+      />
+    );
   }
 
   if (!hashtagSearch) {
@@ -177,6 +191,22 @@ export function HashtagSearchResults({
         filterDuplicateIdentifiers={{
           enabled: true,
         }}
+        onEmpty={
+          trendingTags.length
+            ? () => (
+                <HashtagList
+                  title="Related hashtags"
+                  tags={trendingTags
+                    .filter(({ tag }) =>
+                      tag.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map(({ tag, count }) => ({ tag, count }))}
+                  emptyMessage="No matching hashtags"
+                  onSelect={(tag) => setSearchParams({ q: tag })}
+                />
+              )
+            : undefined
+        }
       />
     </ResultsContainer>
   );
