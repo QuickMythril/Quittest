@@ -174,6 +174,7 @@ interface UserFeedProps {
   onRetweet?: (postId: string, post: PostData) => void;
   onReply?: (postId: string, postName: string) => void;
   onShare?: (postId: string, postName: string) => void;
+  onForward?: (postId: string, postName: string) => void;
   onEdit?: (postId: string, post: PostData) => void;
   onDelete?: (post: PostData) => void;
   onPin?: (postId: string) => void;
@@ -192,6 +193,7 @@ export function UserFeed({
   onRetweet = () => {},
   onReply = () => {},
   onShare = () => {},
+  onForward = () => {},
   onEdit,
   onDelete,
   onPin,
@@ -325,6 +327,7 @@ export function UserFeed({
           onRetweet={onRetweet}
           onReply={onReply}
           onShare={onShare}
+          onForward={onForward}
           onEdit={onEdit}
           onDelete={onDelete}
           onPin={onPin}
@@ -340,6 +343,7 @@ export function UserFeed({
       onRetweet,
       onReply,
       onShare,
+      onForward,
       onEdit,
       onDelete,
       onPin,

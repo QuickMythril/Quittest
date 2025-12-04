@@ -8,6 +8,7 @@ interface PostWrapperProps {
   onRetweet?: (postId: string, post: PostData) => void;
   onReply?: (postId: string, postName: string) => void;
   onShare?: (postId: string, postName: string) => void;
+  onForward?: (postId: string, postName: string) => void;
   onEdit?: (postId: string, post: PostData) => void;
   onDelete?: (post: PostData) => void;
   onPin?: (postId: string) => void;

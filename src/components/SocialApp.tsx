@@ -21,6 +21,7 @@ import { UserFeed } from './UserFeed';
 import { SearchPage } from './SearchPage';
 import { Sidebar } from './Sidebar';
 import { PostContent } from './NewPostInput';
+import { ForwardModal } from './ForwardModal';
 import {
   useGlobal,
   showError,
@@ -269,6 +270,11 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
   const [replyingToPost, setReplyingToPost] = useState<{
     id: string;
     name: string;
+  } | null>(null);
+  const [forwardTarget, setForwardTarget] = useState<{
+    id: string;
+    name: string;
+    target?: 'user' | 'group';
   } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
@@ -716,6 +722,22 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
     }
   }, []);
 
+  const handleForward = useCallback((postId: string, postName: string) => {
+    if (!postId || !postName) {
+      showError('Unable to forward: missing post details.');
+      return;
+    }
+    setForwardTarget({ id: postId, name: postName });
+  }, []);
+
+  const handleCloseForward = useCallback(() => {
+    setForwardTarget(null);
+  }, []);
+
+  const handleForwardPathSelect = useCallback((target: 'user' | 'group') => {
+    setForwardTarget((prev) => (prev ? { ...prev, target } : prev));
+  }, []);
+
   const handleEdit = useCallback((postId: string, post: PostData) => {
     setEditingPost({ id: postId, post });
     setIsPostModalOpen(true);
@@ -965,6 +987,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
               onRetweet={handleRetweet}
               onReply={handleReply}
               onShare={handleShare}
+              onForward={handleForward}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPin={handlePin}
@@ -985,6 +1008,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
               onRetweet={handleRetweet}
               onReply={handleReply}
               onShare={handleShare}
+              onForward={handleForward}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPin={handlePin}
@@ -998,6 +1022,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
               onRetweet={handleRetweet}
               onReply={handleReply}
               onShare={handleShare}
+              onForward={handleForward}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPin={handlePin}
@@ -1015,6 +1040,7 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
               onRetweet={handleRetweet}
               onReply={handleReply}
               onShare={handleShare}
+              onForward={handleForward}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPin={handlePin}
@@ -1092,6 +1118,14 @@ export function SocialApp({ userName = 'User', userAvatar }: SocialAppProps) {
         confirmText={confirmDialog.confirmText}
         onConfirm={confirmDialog.onConfirm}
         onCancel={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
+      />
+
+      <ForwardModal
+        open={!!forwardTarget}
+        postId={forwardTarget?.id}
+        postName={forwardTarget?.name}
+        onClose={handleCloseForward}
+        onSelectPath={handleForwardPathSelect}
       />
 
       {/* Scroll to top button */}

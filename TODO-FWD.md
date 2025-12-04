@@ -29,11 +29,11 @@ Add a "Forward to chat" button on each post to share post content via chat to a 
 
 ## Detailed checklist (in order)
 
-1) **Add forward action entry point**
+1) **Add forward action entry point** ✅
    - Add a "Forward to chat" button/icon to each post’s action bar.
    - Open a small modal with two options: Share to user / Share to group.
 
-2) **Modal UI skeleton**
+2) **Modal UI skeleton** ✅
    - Build the modal shell (title, close, content area, primary action disabled by default).
    - Option toggles for user vs. group; keep modal small.
 

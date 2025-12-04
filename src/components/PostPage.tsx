@@ -178,6 +178,7 @@ interface PostPageProps {
   onRetweet?: (postId: string, post: PostData) => void;
   onReply?: (postId: string, postName: string) => void;
   onShare?: (postId: string, postName: string) => void;
+  onForward?: (postId: string, postName: string) => void;
   onEdit?: (postId: string, post: PostData) => void;
   onDelete?: (post: PostData) => void;
   onPin?: (postId: string) => void;
@@ -199,6 +200,7 @@ export function PostPage({
   onRetweet = () => {},
   onReply = () => {},
   onShare = () => {},
+  onForward = () => {},
   onEdit,
   onDelete,
   onPin,
@@ -280,6 +282,7 @@ export function PostPage({
           onRetweet={onRetweet}
           onReply={onReply}
           onShare={onShare}
+          onForward={onForward}
           onEdit={onEdit}
           onDelete={onDelete}
           onClick={onPostClick}
@@ -294,6 +297,7 @@ export function PostPage({
       onRetweet,
       onReply,
       onShare,
+      onForward,
       onEdit,
       onDelete,
       onPostClick,
@@ -322,6 +326,7 @@ export function PostPage({
             onRetweet={onRetweet}
             onReply={onReply}
             onShare={onShare}
+            onForward={onForward}
             onEdit={onEdit}
             onDelete={onDelete}
             onPin={onPin}
